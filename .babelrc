@@ -1,0 +1,14 @@
+{
+  "presets": [
+    "stage-2",
+    "flow",
+  ["env", {
+    "targets": {
+      "node": "current"
+    }
+  }]
+],
+  "plugins": [
+    ["transform-object-rest-spread", { "useBuiltIns": true }]
+  ],
+}
