@@ -2,10 +2,10 @@ const { Pool } = require('pg').native;
 const logger = require('../utilities/winston');
 
 const config = {
-  user: 'spark',
-  password: 'salasala',
-  host: 'localhost',
-  database: 'cyberpunk',
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
 };
 
 const pool = new Pool(config);

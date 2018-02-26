@@ -1,6 +1,7 @@
 const Koa = require('koa');
 const api = require('./api');
 const config = require('./config');
+const Boom = require('boom');
 const bodyParser = require('koa-bodyparser');
 const morgan = require('koa-morgan');
 const cors = require('kcors');
@@ -20,6 +21,10 @@ const app = new Koa()
   .use(cors())
   .use(bodyParser())
   .use(api.routes())
-  .use(api.allowedMethods());
+  .use(api.allowedMethods({
+    throw: true,
+    notImplemented: () => new Boom.notImplemented(),
+    methodNotAllowed: () => new Boom.methodNotAllowed(),
+  }));
 
 module.exports = app;
