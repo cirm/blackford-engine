@@ -1,58 +1,47 @@
-const db = require('../db/index');
+const dbquery = require('../db/decker');
+const mq = require('../mq/index');
+const Promise = require('bluebird');
 
-const getPlayer = () => ({
-  level: 3,
-});
+const eventQueue = 'exploration';
 
-const getZoneInfo = async (zoneId) => {
-  const result = await db.query('SELECT zone_cap, zone_level, open FROM decker.zones WHERE id = $1;', [zoneId]);
-  if (result.rows.length === 0) return {};
-  return {
-    isOpen: result.rows[0].open,
-    level: result.rows[0].zone_level,
-    cap: result.rows[0].zone_cap,
+const errorResponse = async (ctx, reason) => {
+  ctx.status = 401;
+  ctx.body = {
+    statusCode: 401,
+    error: 'Unauthorized',
+    message: reason,
   };
-};
-
-const isZoneCapOpen = async (zoneId, zoneCap) => {
-  const result = await db.query('SELECT COUNT(player_id) FROM decker.zone_status WHERE zone_id = $1;', [zoneId]);
-  return result.rows[0].count < zoneCap;
+  await mq.sendToQueue(eventQueue, {
+    requestId: ctx.req.headers['x-blackford-request-id'], deckerId: ctx.user.id, roomId: ctx.params.id, timestamp: new Date(), timeout: 0, event: 'rejection',
+  });
+  return ctx;
 };
 
 const enterRoom = async (ctx, next) => {
-  const player = getPlayer();
-  const zone = await getZoneInfo(ctx.params.id);
+  const queries = await Promise.all([
+    dbquery.getPlayer(ctx.user.id),
+    dbquery.getZoneInfo(ctx.params.id)]);
+  const player = queries[0];
+  const zone = queries[1];
+
   if (!zone.isOpen) {
-    ctx.status = 401;
-    ctx.body = {
-      statusCode: 401,
-      error: 'Unauthorized',
-      message: 'Zone is closed off for decontamination!',
-    };
-    return ctx;
+    return errorResponse(ctx, 'Zone is closed off for decontamination!');
   }
   if (player.level < zone.level) {
-    ctx.status = 401;
-    ctx.body = {
-      statusCode: 401,
-      error: 'Unauthorized',
-      message: 'Get serious kid, do you have a deathwish? Get some more exp!',
-    };
-    return ctx;
+    return errorResponse(ctx, 'Get serious kid, do you have a deathwish? Get some more exp!');
   }
-  const canFit = await isZoneCapOpen(ctx.params.id, zone.cap);
+  const canFit = await dbquery.isZoneCapOpen(ctx.params.id, zone.cap);
   if (!canFit) {
-    ctx.status = 401;
-    ctx.body = {
-      statusCode: 401,
-      error: 'Unauthorized',
-      message: 'Too slow, zone if full!',
-    };
-    return ctx;
+    return errorResponse(ctx, 'Too slow, zone if full!');
   }
-  const resp = await db.query('SELECT decker.enter_room($1, $2, $3, $4)', [ctx.user.id, ctx.params.id, new Date(), 300]);
-  console.log(resp);
-  ctx.body = { status: 'Entry granted', timestamp: new Date(), alert: new Date() };
+
+  const timestamp = new Date();
+  const payload = [ctx.user.id, ctx.params.id, timestamp];
+  await dbquery.enterRoom(...payload);
+  await mq.sendToQueue(eventQueue, {
+    requestId: ctx.req.headers['x-blackford-request-id'], deckerId: ctx.user.id, roomId: ctx.params.id, timestamp, timeout: zone.timeout, event: 'enteroom',
+  });
+  ctx.body = { status: 'Entry granted', timestamp, timeout: new Date(timestamp.getTime() + (zone.timeout * 1000)) };
   return next();
 };
 

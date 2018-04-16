@@ -21,9 +21,10 @@ api
 
   .get('/api/v1/decker/nodes/:nodeId')
   .post('/api/v1/decker/nodes/:nodeId')
-  .get('/api/v1/decker/players/:playerId')
-  .post('/api/v1/decker/players/:playerId')
+  .get('/api/v1/decker/players/:playerId') // scan player
+  .post('/api/v1/decker/players/:playerId') // kill player & loot
   .post('/api/v1/decker/payments/')
+
   .get('/api/v1/monitor/gameState');
 
 module.exports = api;

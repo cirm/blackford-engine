@@ -16,8 +16,8 @@ const generateApiToken = user => JWT.signAsync({
 const getTokens = async (ctx, next) => {
   const rawUser = ctx.request.body;
   try {
-    const dbResult = await db.query('SELECT decker.get_player_data($1);', [rawUser.username]);
-    const user = dbResult.rows[0].get_player_data[0];
+    const { rows } = await db.query('SELECT pl.id, pl.username, pl.hpassword, (SELECT ARRAY((SELECT ro.name FROM decker.roles ro WHERE ro.id IN (SELECT pr.role_id FROM decker.player_roles pr WHERE pr.player_id = pl.id)))) as roles FROM decker.players pl WHERE pl.username = $1', [rawUser.username]);
+    const user = rows[0];
     const isAllowed = await bcrypt.compareHash(rawUser.password, user.hpassword);
     if (!isAllowed) throw new Error(`Wrong password for username: ${rawUser.username} `);
     const chatToken = TokenService.generate(rawUser.username, rawUser.device);

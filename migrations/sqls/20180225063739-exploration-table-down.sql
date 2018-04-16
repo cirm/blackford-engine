@@ -8,4 +8,4 @@ DROP TABLE exploration.zone_history CASCADE;
 DROP TABLE exploration.zone_status CASCADE;
 /* Removing table exploration.zones */
 DROP TABLE exploration.zones CASCADE;
-DROP SCHEMA exploration;
+DROP SCHEMA exploration CASCADE;

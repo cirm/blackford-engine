@@ -1,0 +1,31 @@
+version: '2'
+
+# docker volume create --name data -d local
+
+services:
+  postgres:
+    restart: always
+    container_name: postgres_db
+    image: postgres:latest
+    #tty: true
+    ports:
+      - "5432:5432"
+    volumes:
+       - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: spark
+      POSTGRES_PASSWORD: salasala
+      POSTGRES_DB: cyberpunk
+      #PGDATA: /tmp
+  rabbitmq:
+    restart: always
+    container_name: rabbit_mq
+    image: rabbitmq:3-management
+    #tty: true
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+volumes:
+  postgres_data:
+    external: true

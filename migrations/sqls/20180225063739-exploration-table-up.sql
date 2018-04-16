@@ -37,6 +37,7 @@ CREATE TABLE exploration.zone_status (
 INSERT INTO exploration.zones (zone_name, zone_level, zone_cap, zone_timeout, open) VALUES 
 ('haven', 0, 100, '3600', 'true'),
 ('void', 1, 100, '1200','true'),
+('bionics', 4, 3, '800', 'true'),
 ('pharmaceuticals', 8, 1, '300','false');
 
 /* Update zone status function */
@@ -60,7 +61,7 @@ RETURNS trigger AS
 $BODY$
 BEGIN
     INSERT INTO exploration.zone_history (zone_id, player_id, entry, exit, budget) 
-		VALUES (OLD.zone_id, OLD.player_id, OLD.entry, now(), (interval '1' second * OLD.timeout - (now() - OLD.entry)));
+		VALUES (OLD.zone_id, OLD.player_id, OLD.entry, now(), (OLD.timeout - (now() - OLD.entry)));
 		RETURN NEW;
 END;
 $BODY$
@@ -73,18 +74,20 @@ WHEN (OLD.zone_id IS DISTINCT FROM NEW.zone_id)
 EXECUTE PROCEDURE exploration.log_zone_history();
 
 CREATE OR REPLACE FUNCTION exploration.active_room_timeouts(
-) RETURNS table (j JSON) AS
+	OUT zone_id INTEGER,
+	OUT zone_name VARCHAR(20),
+	OUT player_id INTEGER,
+	OUT username VARCHAR(20),
+	OUT timeout INTERVAL
+) AS
 $BODY$
 DECLARE
-	_timeout INTERVAL := (SELECT (entry - (now() - INTERVAL '1' second * timeout)) FROM exploration.zone_status);
-BEGIN
-RETURN QUERY 
-SELECT array_to_json(array_agg(row_to_json(p)))
-FROM
-    (SELECT esz.zone_id, ez.zone_name, esz.player_id, dp.username, _timeout AS timeout
+	_timeout INTERVAL := (SELECT (entry - (now() - timeout)) FROM exploration.zone_status);
+BEGIN 
+SELECT esz.zone_id, ez.zone_name, esz.player_id, dp.username, _timeout AS timeout
 		FROM exploration.zone_status esz, decker.players dp, exploration.zones ez 
 		WHERE esz.player_id = dp.id AND ez.id = esz.zone_id
-		AND (_timeout < INTERVAL '0' second)) p;
+		AND (_timeout < INTERVAL '0' second);
 END;		
 $BODY$
 LANGUAGE plpgsql;
