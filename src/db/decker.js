@@ -6,6 +6,11 @@ const getPlayer = async (playerId) => {
   // return rows[0];
 };
 
+const getPlayersCurrentZone = async (playerId) => {
+  const { rows } = await query('select zone_id, entry from exploration.zone_status where player_id = $1;', [playerId]);
+  return rows[0];
+};
+
 const timeMap = {
   hours: 3600,
   minutes: 60,
@@ -37,6 +42,7 @@ module.exports = {
   getPlayer,
   getZoneInfo,
   isZoneCapOpen,
+  getPlayersCurrentZone,
   enterRoom,
 };
 

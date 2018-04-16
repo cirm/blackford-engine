@@ -18,12 +18,20 @@ const errorResponse = async (ctx, reason) => {
 };
 
 const enterRoom = async (ctx, next) => {
+  const entryZone = ctx.params.id;
   const queries = await Promise.all([
     dbquery.getPlayer(ctx.user.id),
-    dbquery.getZoneInfo(ctx.params.id)]);
+    dbquery.getZoneInfo(entryZone),
+    dbquery.getPlayersCurrentZone(ctx.user.id)]);
+
   const player = queries[0];
   const zone = queries[1];
+  const currentZone = queries[2];
 
+  if (currentZone.zone_id.toString() === entryZone) {
+    ctx.body = { status: 'Entry granted', entry: currentZone.entry, timeout: new Date(new Date(currentZone.entry).getTime() + (zone.timeout * 1000)) };
+    return next();
+  }
   if (!zone.isOpen) {
     return errorResponse(ctx, 'Zone is closed off for decontamination!');
   }
@@ -41,7 +49,7 @@ const enterRoom = async (ctx, next) => {
   await mq.sendToQueue(eventQueue, {
     requestId: ctx.req.headers['x-blackford-request-id'], deckerId: ctx.user.id, roomId: ctx.params.id, timestamp, timeout: zone.timeout, event: 'enteroom',
   });
-  ctx.body = { status: 'Entry granted', timestamp, timeout: new Date(timestamp.getTime() + (zone.timeout * 1000)) };
+  ctx.body = { status: 'Entry granted', entry: timestamp, timeout: new Date(timestamp.getTime() + (zone.timeout * 1000)) };
   return next();
 };
 
