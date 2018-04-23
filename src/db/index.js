@@ -15,7 +15,9 @@ module.exports = {
     const start = Date.now();
     const result = await pool.query(text, params);
     const duration = `${Date.now() - start} ms`;
-    logger.debug('executed query', { text, duration, rows: result.rowCount });
+    logger.debug('executed query', {
+      text, duration, rows: result.rowCount, params,
+    });
     return result;
   },
 };

@@ -1,4 +1,4 @@
-const db = require('../db');
+const dbQuery = require('../db/decker');
 const bcrypt = require('../utilities/bcrypt');
 const TokenService = require('../utilities/tokenService');
 const config = require('../config');
@@ -16,8 +16,9 @@ const generateApiToken = user => JWT.signAsync({
 const getTokens = async (ctx, next) => {
   const rawUser = ctx.request.body;
   try {
-    const { rows } = await db.query('SELECT pl.id, pl.username, pl.hpassword, (SELECT ARRAY((SELECT ro.name FROM decker.roles ro WHERE ro.id IN (SELECT pr.role_id FROM decker.player_roles pr WHERE pr.player_id = pl.id)))) as roles FROM decker.players pl WHERE pl.username = $1', [rawUser.username]);
-    const user = rows[0];
+    if (!rawUser.username || !rawUser.password) throw new Error('Missing required authentication payload for incoming request');
+    const user = await dbQuery.getAuthData(rawUser.username);
+    if (!user) throw new Error(`Unknown user authentication request for ${rawUser.username}`);
     const isAllowed = await bcrypt.compareHash(rawUser.password, user.hpassword);
     if (!isAllowed) throw new Error(`Wrong password for username: ${rawUser.username} `);
     const chatToken = TokenService.generate(rawUser.username, rawUser.device);
@@ -43,10 +44,10 @@ const getTokens = async (ctx, next) => {
 
 const getGameToken = async (ctx, next) => {
   const rawUser = ctx.request.body;
-  logger.log(rawUser);
   try {
-    const dbResult = await db.query('SELECT decker.get_player_data($1);', [rawUser.username]);
-    const user = dbResult.rows[0].get_player_data[0];
+    if (!rawUser.username || !rawUser.password) throw new Error('Missing required authentication payload for incoming request');
+    const user = await dbQuery.getAuthData(rawUser.username);
+    if (!user) throw new Error(`Unknown user authentication request for ${rawUser.username}`);
     const isAllowed = await bcrypt.compareHash(rawUser.password, user.hpassword);
     if (!isAllowed) throw new Error(`Wrong password for username: ${rawUser.username} `);
     const apiToken = await generateApiToken(user);
@@ -83,9 +84,9 @@ const renewToken = async (ctx, next) => {
       id: verified.id,
     };
   } catch (e) {
-    logger.debug(e.toString());
+    logger.error(e.toString());
     ctx.status = 404;
-    ctx.body = { error: e.toString() };
+    ctx.body = { error: 'Missing or malformed Token', code: 401 };
     return ctx;
   }
   return next();
@@ -118,7 +119,7 @@ const userAuth = async (ctx, next) => {
 };
 
 const checkRole = (ctx, next, role) => {
-  if (ctx.user.roles.indexOf(role) === -1) {
+  if (ctx.user.roles.indexOf(role) === -1 || ctx.user.roles.indexOf('admin') === -1) {
     ctx.status = 401;
     ctx.body = {
       statusCode: 401,

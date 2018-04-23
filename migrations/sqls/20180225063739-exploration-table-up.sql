@@ -73,18 +73,17 @@ FOR EACH ROW
 WHEN (OLD.zone_id IS DISTINCT FROM NEW.zone_id)
 EXECUTE PROCEDURE exploration.log_zone_history();
 
-CREATE OR REPLACE FUNCTION exploration.active_room_timeouts(
-) RETURNS TABLE (
-	zone_id INTEGER,
+CREATE OR REPLACE FUNCTION exploration.active_room_timeouts() 
+RETURNS TABLE ( zone_id INTEGER,
 	zone_name VARCHAR(20),
 	player_id INTEGER,
 	username VARCHAR(20),
 	o_timeout INTERVAL) AS
 $BODY$
 DECLARE
-	_timeout INTERVAL := (SELECT (entry - (now() - timeout)) FROM exploration.zone_status);
+	_timeout INTERVAL := (SELECT (ezs.entry - (now() - ezs.timeout)) FROM exploration.zone_status ezs);
 BEGIN 
-RETURN QUERY SELECT esz.zone_id, ez.zone_name, esz.player_id, dp.username, _timeout AS o_timeout
+RETURN QUERY SELECT esz.zone_id, ez.zone_name, esz.player_id, dp.username, _timeout AS timeout
 		FROM exploration.zone_status esz, decker.players dp, exploration.zones ez 
 		WHERE esz.player_id = dp.id AND ez.id = esz.zone_id
 		AND (_timeout < INTERVAL '0' second);

@@ -1,11 +1,13 @@
 const mq = require('amqplib');
 const logger = require('../utilities/winston');
+const orders = require('./orders');
 
 const queues = [
   'payments',
   'boosts',
   'looting',
   'exploration',
+  'orders',
 ];
 
 let channel = false;
@@ -24,6 +26,8 @@ const initMq = async () => {
   }
   try {
     await queues.forEach(q => channel.assertQueue(q, { durable: true }));
+    channel.prefetch(1);
+    channel.consume('orders', (msg) => { orders.orderConsumer(msg, channel); }, { noAck: false });
   } catch (e) {
     logger.error(`Error confirming MQ queue: ${e}`);
   }

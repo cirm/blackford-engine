@@ -4,15 +4,17 @@
     "eslint:recommended",
     "plugin:flowtype/recommended",
     "airbnb",
+    "plugin:jest/recommended",
     "plugin:lodash-fp/recommended"
   ],
   "plugins": [
     "lodash-fp",
-    "flowtype"
+    "flowtype",
+    "jest"
   ],
   "env": {
     "node": true,
-    "mocha": true
+    "jest/globals": true
   },
   "rules": {
     "flowtype/use-flow-type": 1,
