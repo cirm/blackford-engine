@@ -60,19 +60,20 @@ CREATE OR REPLACE FUNCTION characters.buy_upgrade(
 ) AS 
 $BODY$
 DECLARE
-  _wallet INTEGER := (SELECT wallet FROM characters.stats WHERE id = i_player_id);
+  _wallet INT; 
 	_upgrade_price INT;
 	_upgrade_multiplier INT;
 	_final_price INT;
 	_count INT;
 BEGIN
+SELECT wallet INTO _wallet FROM characters.stats WHERE player_id = i_player_id;
 SELECT cost, multiplier INTO _upgrade_price, _upgrade_multiplier FROM characters.upgrades WHERE id = i_upgrade_id;
 _count := (SELECT count(upgrade_id) FROM characters.orders WHERE player_id = i_player_id and upgrade_id = i_upgrade_id);
 IF _count = 0 THEN _final_price:= _upgrade_price; ELSE _final_price := _count * _upgrade_multiplier * _upgrade_price;
 END IF;
-IF _wallet IS NULL OR _wallet < _final_price THEN text:= 'Not enough balance'; status:=FALSE; order_id := NULL;
+IF _wallet < _final_price THEN text:= 'Not enough balance'; status:=FALSE; order_id := _wallet;
 ELSE
-UPDATE characters.stats SET wallet = (_wallet - _final_price) WHERE player_id = i_player_id;
+UPDATE characters.stats SET wallet =_wallet - _final_price WHERE player_id = i_player_id;
 INSERT INTO characters.orders (timestamp, ammount, wallet_statement, upgrade_id, player_id, status) VALUES (now(), _final_price, _wallet, i_upgrade_id, i_player_id, 0 ) RETURNING id INTO order_id;
 text:= 'Payment Successful';
 status:=TRUE;

@@ -119,14 +119,16 @@ const userAuth = async (ctx, next) => {
 };
 
 const checkRole = (ctx, next, role) => {
-  if (ctx.user.roles.indexOf(role) === -1 || ctx.user.roles.indexOf('admin') === -1) {
-    ctx.status = 401;
-    ctx.body = {
-      statusCode: 401,
-      error: 'Unauthorized',
-      message: 'Feeling lucky, Punk?',
-    };
-    return ctx;
+  if (ctx.user.roles.indexOf(role) === -1) {
+    if (ctx.user.roles.indexOf('admin') === -1) {
+      ctx.status = 401;
+      ctx.body = {
+        statusCode: 401,
+        error: 'Unauthorized',
+        message: 'Feeling lucky, Punk?',
+      };
+      return ctx;
+    }
   }
   return next();
 };

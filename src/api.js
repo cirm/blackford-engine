@@ -17,6 +17,8 @@ api
 
 
   .get('/api/v1/admin/users', users.getAllUsers)
+  .post('/api/v1/admin/users/', users.createUser)
+  .post('/api/v1/admin/users/:id/wallet/:ammount', users.addBudget)
   .get('/api/v1/admin/exploration', exploration.getRooms)
   .get('/api/v1/admin/exploration/timeouts', exploration.getLaggingDeckers)
 

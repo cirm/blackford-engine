@@ -1,4 +1,5 @@
 const dbQuery = require('../db/decker');
+const adminQuery = require('../db/admin');
 const mq = require('../mq/index');
 const Promise = require('bluebird');
 
@@ -54,19 +55,19 @@ const enterRoom = async (ctx, next) => {
 };
 
 const getRooms = async (ctx, next) => {
-  const rooms = await dbQuery.getZones();
+  const rooms = await adminQuery.getZones();
   ctx.body = rooms;
   return next();
 };
 
 const getRoomHistoryForPlayer = async (ctx, next) => {
-  const rooms = await dbQuery.getDeckerZoneHistory(ctx.user.id);
+  const rooms = await adminQuery.getDeckerZoneHistory(ctx.user.id);
   ctx.body = rooms;
   return next();
 };
 
 const getLaggingDeckers = async (ctx, next) => {
-  ctx.body = await dbQuery.findLaggingDeckers();
+  ctx.body = await adminQuery.findLaggingDeckers();
   return next();
 };
 
