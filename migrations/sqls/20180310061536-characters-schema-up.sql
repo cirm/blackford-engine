@@ -71,7 +71,7 @@ SELECT cost, multiplier INTO _upgrade_price, _upgrade_multiplier FROM characters
 _count := (SELECT count(upgrade_id) FROM characters.orders WHERE player_id = i_player_id and upgrade_id = i_upgrade_id);
 IF _count = 0 THEN _final_price:= _upgrade_price; ELSE _final_price := _count * _upgrade_multiplier * _upgrade_price;
 END IF;
-IF _wallet < _final_price THEN text:= 'Not enough balance'; status:=FALSE; order_id := _wallet;
+IF _wallet < _final_price THEN text:= 'Not enough balance'; status:=FALSE; order_id := NULL;
 ELSE
 UPDATE characters.stats SET wallet =_wallet - _final_price WHERE player_id = i_player_id;
 INSERT INTO characters.orders (timestamp, ammount, wallet_statement, upgrade_id, player_id, status) VALUES (now(), _final_price, _wallet, i_upgrade_id, i_player_id, 0 ) RETURNING id INTO order_id;

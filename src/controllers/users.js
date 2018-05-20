@@ -26,7 +26,7 @@ const createUser = async (ctx, next) => {
 
 const addBudget = async (ctx, next) => {
   const userId = ctx.params.id;
-  const ammount = ctx.request.body.ammount || 10000;
+  const ammount = ctx.params.ammount || 10000;
   const resp = await dbQuery.provisionBudget(userId, ammount);
   ctx.body = {
     ...resp,

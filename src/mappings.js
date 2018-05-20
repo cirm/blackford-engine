@@ -17,9 +17,16 @@ const timeMap = {
   milliseconds: 0,
 };
 
+const scanMap = {
+  0: 'item',
+  1: 'player',
+  2: 'mob',
+  3: 'node',
+};
 
 module.exports = {
   orderStatus,
+  scanMap,
   timeMap,
   upgradeType,
 };

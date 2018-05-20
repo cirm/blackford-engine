@@ -29,7 +29,7 @@ const enterRoom = async (ctx, next) => {
   const zone = queries[1];
   const currentZone = queries[2];
 
-  if (currentZone.zone_id.toString() === entryZone) {
+  if (currentZone && currentZone.zone_id.toString() === entryZone) {
     ctx.body = { status: 'Entry granted', entry: currentZone.entry, timeout: new Date(new Date(currentZone.entry).getTime() + (zone.timeout * 1000)) };
     return next();
   }

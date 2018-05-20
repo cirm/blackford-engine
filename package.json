@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "amqplib": "^0.5.2",
-    "bcrypt": "^1.0.3",
+    "bcrypt": "^2.0.1",
     "bluebird": "^3.5.0",
     "db-migrate": "^0.11.1",
     "db-migrate-pg": "^0.4.0",
@@ -51,7 +51,7 @@
     "moment": "^2.18.1",
     "nodemon": "^1.17.0",
     "pg": "^7.4.0",
-    "pg-native": "^2.2.0",
+    "pg-native": "^3.0.0",
     "postgres-interval": "^1.1.1",
     "socket.io": "^2.0.3",
     "twilio": "^3.12.0",

@@ -9,9 +9,9 @@ const findLaggingDeckers = async () => {
     zone_name: raw.zone_name,
     player_id: raw.player_id,
     username: raw.username,
-    timeout: Object.keys(raw.o_timeout)
+    timeout: Object.keys(raw._timeout)
       .reduce(
-        (total, key) => total + (raw.o_timeout[key] * timeMap[key]),
+        (total, key) => total + (raw._timeout[key] * timeMap[key]),
         0,
       ),
   }));

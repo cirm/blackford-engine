@@ -74,19 +74,15 @@ WHEN (OLD.zone_id IS DISTINCT FROM NEW.zone_id)
 EXECUTE PROCEDURE exploration.log_zone_history();
 
 CREATE OR REPLACE FUNCTION exploration.active_room_timeouts() 
-RETURNS TABLE ( zone_id INTEGER,
+RETURNS TABLE ( 
+	zone_id INTEGER,
 	zone_name VARCHAR(20),
 	player_id INTEGER,
 	username VARCHAR(20),
-	o_timeout INTERVAL) AS
+	_timeout INTERVAL) AS
 $BODY$
-DECLARE
-	_timeout INTERVAL := (SELECT (ezs.entry - (now() - ezs.timeout)) FROM exploration.zone_status ezs);
 BEGIN 
-RETURN QUERY SELECT esz.zone_id, ez.zone_name, esz.player_id, dp.username, _timeout AS timeout
-		FROM exploration.zone_status esz, decker.players dp, exploration.zones ez 
-		WHERE esz.player_id = dp.id AND ez.id = esz.zone_id
-		AND (_timeout < INTERVAL '0' second);
+RETURN QUERY select ezs.zone_id, ez.zone_name, ezs.player_id, dp.username, (ezs.entry - (now() - ezs.timeout)) as _timeout from exploration.zone_status ezs inner join decker.players dp on ezs.player_id = dp.id inner join exploration.zones ez on ez.id = ezs.zone_id order by _timeout ASC;
 END;		
 $BODY$
 LANGUAGE plpgsql;

@@ -3,6 +3,7 @@ const users = require('./controllers/users');
 const authentication = require('./controllers/authentication');
 const exploration = require('./controllers/exploration');
 const character = require('./controllers/character');
+const scan = require('./controllers/scan');
 
 const api = KoaRouter();
 api
@@ -19,17 +20,17 @@ api
   .get('/api/v1/admin/users', users.getAllUsers)
   .post('/api/v1/admin/users/', users.createUser)
   .post('/api/v1/admin/users/:id/wallet/:ammount', users.addBudget)
+
   .get('/api/v1/admin/exploration', exploration.getRooms)
   .get('/api/v1/admin/exploration/timeouts', exploration.getLaggingDeckers)
 
   .get('/api/v1/decker/exploration/history/', exploration.getRoomHistoryForPlayer)
   .get('/api/v1/decker/exploration/zones/:id', exploration.enterRoom)
 
-  .get('/api/v1/decker/nodes/:nodeId')
-  .post('/api/v1/decker/nodes/:nodeId')
-
-  .get('/api/v1/decker/players/:playerId') // scan player
-  .post('/api/v1/decker/players/:playerId') // kill player & loot
+  .get('/api/v1/decker/scan/:type/:id', scan.readItem) // scan something
+  .post('/api/v1/decker/players/unplug/:playerId') // kill player & loot
+  .post('/api/v1/decker/nodes/:nodeId') // hack node
+  .post('/api/v1/decker/mob/:mobId') // kill & loot mob
 
   .get('/api/v1/decker/products', character.getProducts) // get all products
   .get('/api/v1/decker/orders', character.getOrdersForUser) // get characters orders
