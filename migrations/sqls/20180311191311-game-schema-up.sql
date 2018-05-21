@@ -30,7 +30,7 @@ create table game.objects(
 	meta VARCHAR(100)
 );
 
-create tabel game.player2objects(
+create table game.player2objects(
 	id SERIAL PRIMARY KEY,
 	object_id INT,
 	player_id INT,

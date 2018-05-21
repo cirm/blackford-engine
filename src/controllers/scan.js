@@ -19,7 +19,7 @@ const readPlayer = async (ctx, next) => {
 };
 
 const readNode = async (ctx, next) => {
-  const { rows } = await query('SELECT gn.id, gn.active, dp.username AS owner, gn.level FROM game.nodes gn LEFT OUTEr JOIN decker.players dp ON (gn.owner = dp.id) WHERE gn.id = $1;', [ctx.params.id]);
+  const { rows } = await query('SELECT gn.id, gn.active, dp.username AS owner, gn.level FROM game.nodes gn LEFT OUTER JOIN decker.players dp ON (gn.owner = dp.id) WHERE gn.id = $1;', [ctx.params.id]);
   if (!rows.length) return readError(ctx);
   ctx.body = {
     active: rows[0].active,
