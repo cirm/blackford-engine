@@ -5,13 +5,14 @@ const exploration = require('./controllers/exploration');
 const decker = require('./controllers/decker');
 const character = require('./controllers/character');
 const scan = require('./controllers/scan');
+const routeAuth = require('./controllers/routeAuth');
 
 const api = KoaRouter();
 api
-  .use('/api', authentication.userAuth)
-  .use('/api/v1/admin', authentication.checkAdmin)
-  .use('/api/v1/decker', authentication.checkDecker)
-  .use('/api/v1/montor', authentication.checkMonitor)
+  .use('/api', routeAuth.userAuth)
+  .use('/api/v1/admin', routeAuth.checkAdmin)
+  .use('/api/v1/decker', routeAuth.checkDecker)
+  .use('/api/v1/montor', routeAuth.checkMonitor)
 
   .post('/token', authentication.getTokens) // get chatToken
   .put('/token', authentication.renewToken) // renew chatToken
