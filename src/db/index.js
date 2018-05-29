@@ -10,14 +10,22 @@ const config = {
 
 const pool = new Pool(config);
 
-module.exports = {
-  query: async (text, params) => {
-    const start = Date.now();
+const query = async (text, params) => {
+  const start = Date.now();
+  try {
     const result = await pool.query(text, params);
     const duration = `${Date.now() - start} ms`;
     logger.debug('executed query', {
-      text, duration, rows: result.rowCount, params,
+      query: text, duration, rows: result.rowCount, params,
     });
     return result;
-  },
+  } catch (e) {
+    logger.error('Error executing query.', { error: e, query: text, params });
+    return { error: e };
+  }
 };
+
+module.exports = {
+  query,
+};
+

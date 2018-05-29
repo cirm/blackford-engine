@@ -5,31 +5,62 @@ const config = require('../config');
 const logger = require('../utilities/winston');
 const Promise = require('bluebird');
 const JWT = Promise.promisifyAll(require('jsonwebtoken'));
+const { asyncPipe } = require('../utilities/functional');
 
 
-const generateApiToken = user => JWT.signAsync({
-  id: user.id,
-  username: user.username,
-  roles: user.roles,
+const generateApiToken = ({ id, username, roles }) => JWT.signAsync({
+  id,
+  username,
+  roles,
 }, config.tokenSecret, { expiresIn: config.tokenOptions.expiresIn });
 
+const parseUserFromBody = ({ request }) => ({ auth: request.body } || {});
+const validateRawFields = (user) => {
+  if (!user.auth.password || !user.auth.username) throw new Error('Missing required authentication payload for incoming request');
+  return user;
+};
+const getExistingUser = async (user) => {
+  const result = await dbQuery.getAuthData(user.auth.username);
+  if (!result) throw new Error(`Unknown user authentication request for ${user.auth.username}`);
+  return ({ ...user, db: result });
+};
+
+const validatePassword = async (user) => {
+  const isAllowed = await bcrypt.compareHash(user.auth.password, user.db.hpassword);
+  if (!isAllowed) throw new Error(`Wrong password for username: ${user.auth.username} `);
+  return user;
+};
+
+const generateChatToken = user =>
+  ({ ...user, chatToken: TokenService.generate(user.auth.username, user.auth.device).toJwt() });
+
+
+const formatApiResponseBody = async ({ auth, db }) => ({
+  identity: auth.username,
+  apiToken: await generateApiToken(db),
+  roles: db.roles,
+  id: db.id,
+});
+const formatResponseBody = async ({ auth, db, chatToken }) => ({
+  identity: auth.username,
+  apiToken: await generateApiToken(db),
+  roles: db.roles,
+  id: db.id,
+  chatToken,
+});
+
+const getAuthTokens = asyncPipe(
+  parseUserFromBody,
+  validateRawFields,
+  getExistingUser,
+  validatePassword,
+  generateChatToken,
+  formatResponseBody,
+);
+
 const getTokens = async (ctx, next) => {
-  const rawUser = ctx.request.body;
   try {
-    if (!rawUser.username || !rawUser.password) throw new Error('Missing required authentication payload for incoming request');
-    const user = await dbQuery.getAuthData(rawUser.username);
-    if (!user) throw new Error(`Unknown user authentication request for ${rawUser.username}`);
-    const isAllowed = await bcrypt.compareHash(rawUser.password, user.hpassword);
-    if (!isAllowed) throw new Error(`Wrong password for username: ${rawUser.username} `);
-    const chatToken = TokenService.generate(rawUser.username, rawUser.device);
-    const apiToken = await generateApiToken(user);
-    ctx.body = {
-      identity: rawUser.username,
-      chatToken: chatToken.toJwt(),
-      apiToken,
-      roles: user.roles,
-      id: user.id,
-    };
+    ctx.body = await getAuthTokens(ctx);
   } catch (e) {
     logger.error(e.toString());
     ctx.body = {
@@ -42,21 +73,17 @@ const getTokens = async (ctx, next) => {
   return next();
 };
 
+const getApiToken = asyncPipe(
+  parseUserFromBody,
+  validateRawFields,
+  getExistingUser,
+  validatePassword,
+  formatApiResponseBody,
+);
+
 const getGameToken = async (ctx, next) => {
-  const rawUser = ctx.request.body;
   try {
-    if (!rawUser.username || !rawUser.password) throw new Error('Missing required authentication payload for incoming request');
-    const user = await dbQuery.getAuthData(rawUser.username);
-    if (!user) throw new Error(`Unknown user authentication request for ${rawUser.username}`);
-    const isAllowed = await bcrypt.compareHash(rawUser.password, user.hpassword);
-    if (!isAllowed) throw new Error(`Wrong password for username: ${rawUser.username} `);
-    const apiToken = await generateApiToken(user);
-    ctx.body = {
-      identity: rawUser.username,
-      apiToken,
-      roles: user.roles,
-      id: user.id,
-    };
+    ctx.body = await getApiToken(ctx);
   } catch (e) {
     logger.error(e.toString());
     ctx.body = {

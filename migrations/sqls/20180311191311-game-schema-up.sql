@@ -27,7 +27,8 @@ create table game.log(
 create table game.objects(
 	id SERIAL PRIMARY KEY,
 	type VARCHAR(20),
-	meta VARCHAR(100)
+	meta VARCHAR(100),
+	value INT
 );
 
 create table game.player2objects(
@@ -59,11 +60,11 @@ INSERT INTO game.mobs (level, bounty, meta) VALUES
 (2, 4000, 'It is a big fucken mob'),
 (3, 8000, 'Bakufu has arrived');
 
-INSERT INTO game.objects (type, meta) VALUES
-('movable', 'magnetic vase'),
-('static', 'random cypher'),
-('movable', 'a big box'),
-('movable','datalog from the 20th century');
+INSERT INTO game.objects (type, meta, value) VALUES
+('movable', 'magnetic vase', 100),
+('static', 'random cypher', 200),
+('movable', 'a big box', 500),
+('movable','datalog from the 20th century', 10000);
 
 INSERT INTO game.nodes (active, owner, level) VALUES 
 ('true', null, 1),

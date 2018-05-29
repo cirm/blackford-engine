@@ -1,6 +1,7 @@
 const { query } = require('./index');
 const logger = require('../utilities/winston');
 const { timeMap } = require('../mappings');
+const Promise = require('bluebird');
 
 const findLaggingDeckers = async () => {
   const { rows } = await query('SELECT * FROM exploration.active_room_timeouts();');
@@ -34,9 +35,13 @@ const getZones = async () => { const { rows } = await query('SELECT * FROM explo
 const createUser = async (username, hpassword) => {
   try {
     const { rows } = await query('INSERT INTO decker.players (username, hpassword) VALUES ($1, $2) RETURNING id', [username, hpassword]);
-    await query('INSERT INTO decker.player_roles (player_id, role_id) VALUES ($1, 3)', [rows[0].id]);
-    const response = await query('SELECT * FROM characters.create_char($1)', [rows[0].id]);
-    return response.rows[0];
+    if (rows) {
+      const response = await Promise.all([
+        query('INSERT INTO decker.player_roles (player_id, role_id) VALUES ($1, 3)', [rows[0].id]),
+        query('SELECT * FROM characters.create_char($1)', [rows[0].id]),
+      ]);
+      return response[1].rows[0];
+    }
   } catch (e) {
     logger.error(e);
     return e;
