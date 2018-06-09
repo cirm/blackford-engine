@@ -2,17 +2,17 @@ const { query } = require('./index');
 const { timeMap } = require('../mappings');
 
 const getAuthData = async (username) => {
-  const { rows } = await query('SELECT pl.id, pl.username, pl.hpassword, (SELECT ARRAY((SELECT ro.name FROM decker.roles ro WHERE ro.id IN (SELECT pr.role_id FROM decker.player_roles pr WHERE pr.player_id = pl.id)))) as roles FROM decker.players pl WHERE pl.username = $1', [username]);
+  const { rows } = await query('SELECT * from account.get_account_data($1)', [username]);
   return rows[0];
 };
 
 const getPlayer = async (playerId) => {
-  const { rows } = await query('SELECT level FROM characters.stats WHERE player_id = $1;', [playerId]);
+  const { rows } = await query('SELECT level FROM characters.deckers WHERE id = $1;', [playerId]);
   return rows[0];
 };
 
 const getPlayersCurrentZone = async (playerId) => {
-  const { rows } = await query('SELECT zone_id, entry FROM exploration.zone_status WHERE player_id = $1;', [playerId]);
+  const { rows } = await query('SELECT zone_id, entry FROM exploration.zone_status WHERE decker_id = $1;', [playerId]);
   return rows[0];
 };
 
@@ -31,14 +31,14 @@ const getZoneInfo = async (zoneId) => {
 };
 
 const isZoneCapOpen = async (zoneId, zoneCap) => {
-  const result = await query('SELECT COUNT(player_id) FROM exploration.zone_status WHERE zone_id = $1;', [zoneId]);
+  const result = await query('SELECT COUNT(decker_id) FROM exploration.zone_status WHERE zone_id = $1;', [zoneId]);
   return result.rows[0].count < zoneCap;
 };
 
-const enterRoom = async (userId, roomId, timestamp) => query('SELECT exploration.enter_room($1, $2, $3);', [userId, roomId, timestamp]);
+const enterRoom = async (deckerId, roomId, timestamp) => query('SELECT exploration.enter_room($1, $2, $3);', [deckerId, roomId, timestamp]);
 
 const getCharForUser = async (username) => {
-  const { rows } = await query('SELECT cs.humanity, cs.wallet, cs.player_id, cs.level, dp.username FROM characters.stats cs, decker.players dp WHERE player_id = $1 and cs.player_id = dp.id', [username]);
+  const { rows } = await query('SELECT cs.humanity, cs.wallet, cs.id, cs.level, cs.decker FROM characters.deckers cs WHERE id = $1', [username]);
   return rows[0];
 };
 
@@ -48,7 +48,7 @@ const getProducts = async () => {
 };
 
 const getOrders = async (username) => {
-  const { rows } = await query('SELECT * FROM characters.orders where player_id = $1', [username]);
+  const { rows } = await query('SELECT * FROM characters.orders where decker_id = $1', [username]);
   return rows;
 };
 

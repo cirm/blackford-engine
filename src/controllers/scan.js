@@ -11,16 +11,16 @@ const readError = (ctx) => {
 };
 
 const readPlayer = async (ctx, next) => {
-  const { rows } = await query('SELECT ch.level, ch.humanity, dp.username FROM characters.stats ch, decker.players dp WHERE ch.player_id = $1 AND ch.player_id = dp.id', [ctx.params.id]);
+  const { rows } = await query('SELECT cd.level, cd.humanity, cd.decker FROM characters.deckers cd WHERE cd.id = $1', [ctx.params.id]);
   if (!rows.length) return readError(ctx);
   ctx.body = {
-    decker: rows[0].username, humanity: rows[0].humanity, level: rows[0].level, misc: { bio: 'TBD' }, // TODO: Implement bio.
+    decker: rows[0].decker, humanity: rows[0].humanity, level: rows[0].level, misc: { bio: 'TBD' }, // TODO: Implement bio.
   };
   return next();
 };
 
 const readNode = async (ctx, next) => {
-  const { rows } = await query('SELECT gn.id, gn.active, dp.username AS owner, gn.level FROM game.nodes gn LEFT OUTER JOIN decker.players dp ON (gn.owner = dp.id) WHERE gn.id = $1;', [ctx.params.id]);
+  const { rows } = await query('SELECT gn.id, gn.active, cd.decker AS owner, gn.level FROM game.nodes gn LEFT OUTER JOIN characters.deckers cd ON (gn.owner = cd.id) WHERE gn.id = $1;', [ctx.params.id]);
   if (!rows.length) return readError(ctx);
   ctx.body = {
     active: rows[0].active,

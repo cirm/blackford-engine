@@ -30,7 +30,8 @@ api
   .get('/api/v1/decker/exploration/zones/:id', exploration.enterRoom)
 
   .get('/api/v1/decker/scan/:type/:id', scan.readItem) // scan something
-  .post('/api/v1/decker/players/unplug/:playerId', decker.nukeDecker) // kill player & loot
+  .get('/api/v1/decker/unplug/:playerId', decker.nukeDecker) // kill player
+  .get('/api/v1/decker/ravage/:playerId') // kill player & loot
   .post('/api/v1/decker/nodes/:nodeId') // hack node
   .post('/api/v1/decker/mob/:mobId') // kill & loot mob
 

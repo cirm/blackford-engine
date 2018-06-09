@@ -18,8 +18,8 @@ const findLaggingDeckers = async () => {
   }));
 };
 
-const getDeckerZoneHistory = async (playerId) => {
-  const { rows } = await query('SELECT ez.zone_name, dp.username, ezh.entry, ezh.exit, ezh.budget FROM exploration.zone_history ezh, exploration.zones ez, decker.players dp WHERE ezh.player_id = $1 and ezh.zone_id = ez.id AND dp.id = $1 ORDER BY ezh.entry', [playerId]);
+const getDeckerZoneHistory = async (deckerId) => {
+  const { rows } = await query('SELECT ez.zone_name, cd.decker, ezh.entry, ezh.exit, ezh.budget FROM exploration.zone_history ezh, exploration.zones ez, characters.deckers cd WHERE ezh.decker_id = $1 and ezh.zone_id = ez.id AND cd.id = $1 ORDER BY ezh.entry', [deckerId]);
   return rows.map(logEntry => ({
     ...logEntry,
     budget: Object.keys(logEntry.budget)
@@ -32,13 +32,13 @@ const getDeckerZoneHistory = async (playerId) => {
 
 const getZones = async () => { const { rows } = await query('SELECT * FROM exploration.zones'); return rows; };
 
-const createUser = async (username, hpassword) => {
+const createUser = async (decker, hpassword) => {
   try {
-    const { rows } = await query('INSERT INTO decker.players (username, hpassword) VALUES ($1, $2) RETURNING id', [username, hpassword]);
+    const { rows } = await query('INSERT INTO account.authentication (hpassword) VALUES ($1) RETURNING id', [hpassword]);
     if (rows) {
       const response = await Promise.all([
-        query('INSERT INTO decker.player_roles (player_id, role_id) VALUES ($1, 3)', [rows[0].id]),
-        query('SELECT * FROM characters.create_char($1)', [rows[0].id]),
+        query('INSERT INTO account.player_roles (account_id, role_id) VALUES ($1, 2)', [rows[0].id]), // decker role
+        query('SELECT * FROM characters.create_decker($1, $2)', [rows[0].id, decker]),
       ]);
       return response[1].rows[0];
     }
@@ -50,7 +50,7 @@ const createUser = async (username, hpassword) => {
 
 const provisionBudget = async (userId, ammount = 1000) => {
   try {
-    const { rows } = await query('UPDATE characters.stats SET wallet = $2 WHERE player_id = $1 RETURNING wallet, player_id;', [userId, ammount]);
+    const { rows } = await query('UPDATE characters.deckers SET wallet = $2 WHERE id = $1 RETURNING wallet, id;', [userId, ammount]);
     return rows[0];
   } catch (e) {
     logger.error(e);

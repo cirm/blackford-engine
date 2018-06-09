@@ -1,7 +1,7 @@
-const dbQuery = require('../db/decker');
+const { getAuthData } = require('../db/decker');
 const bcrypt = require('../utilities/bcrypt');
 const TokenService = require('../utilities/tokenService');
-const config = require('../config');
+const { tokenSecret, tokenOptions } = require('../config');
 const logger = require('../utilities/winston');
 const Promise = require('bluebird');
 const JWT = Promise.promisifyAll(require('jsonwebtoken'));
@@ -12,7 +12,7 @@ const generateApiToken = ({ id, username, roles }) => JWT.signAsync({
   id,
   username,
   roles,
-}, config.tokenSecret, { expiresIn: config.tokenOptions.expiresIn });
+}, tokenSecret, { expiresIn: tokenOptions.expiresIn });
 
 const parseUserFromBody = ({ request }) => ({ auth: request.body } || {});
 const validateRawFields = (user) => {
@@ -20,7 +20,7 @@ const validateRawFields = (user) => {
   return user;
 };
 const getExistingUser = async (user) => {
-  const result = await dbQuery.getAuthData(user.auth.username);
+  const result = await getAuthData(user.auth.username);
   if (!result) throw new Error(`Unknown user authentication request for ${user.auth.username}`);
   return ({ ...user, db: result });
 };
@@ -96,20 +96,41 @@ const getGameToken = async (ctx, next) => {
   return next();
 };
 
+const parseTokenFromBody = ({ request }) => ({ tokens: request.body } || {});
+
+const logRequest = (payload) => {
+  logger.debug(`Renewal for: ${payload.tokens.apiToken}`);
+  return payload;
+};
+
+const verifyToken = async ({ tokens }) => {
+  const { username, id, roles } = await JWT.verifyAsync(tokens.apiToken, tokenSecret);
+  return {
+    ...tokens, auth: { username, device: 'browser' }, username, id, roles,
+  };
+};
+
+const formatRenewalResponseBody = async ({
+  username, id, roles, chatToken,
+}) => ({
+  identity: username,
+  apiToken: await generateApiToken({ id, username, roles }),
+  chatToken,
+  roles,
+  id,
+});
+
+const renewTokens = asyncPipe(
+  parseTokenFromBody,
+  logRequest,
+  verifyToken,
+  generateChatToken,
+  formatRenewalResponseBody,
+);
+
 const renewToken = async (ctx, next) => {
-  const tokens = ctx.request.body;
-  logger.debug(`Renewal for: ${tokens.apiToken}`);
   try {
-    const verified = await JWT.verifyAsync(tokens.apiToken, config.tokenSecret);
-    const chatToken = TokenService.generate(verified.username, 'browser');
-    const apiToken = await generateApiToken({ ...verified });
-    ctx.body = {
-      identity: verified.username,
-      chatToken: chatToken.toJwt(),
-      apiToken,
-      roles: verified.roles,
-      id: verified.id,
-    };
+    ctx.body = await renewTokens(ctx);
   } catch (e) {
     logger.error(e.toString());
     ctx.status = 404;

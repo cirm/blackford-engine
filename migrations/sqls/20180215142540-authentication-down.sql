@@ -1,1 +1,0 @@
-DROP FUNCTION IF EXISTS decker.get_player_data();

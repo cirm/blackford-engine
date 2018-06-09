@@ -4,20 +4,17 @@ const mq = require('../mq/index');
 const eventQueue = 'orders';
 
 const getCharSheet = async (ctx, next) => {
-  const char = await dbQuery.getCharForUser(ctx.user.id);
-  ctx.body = char;
+  ctx.body = await dbQuery.getCharForUser(ctx.user.id);
   return next();
 };
 
 const getProducts = async (ctx, next) => {
-  const products = await dbQuery.getProducts();
-  ctx.body = products;
+  ctx.body = await dbQuery.getProducts();
   return next();
 };
 
 const getOrdersForUser = async (ctx, next) => {
-  const orders = await dbQuery.getOrders(ctx.user.id);
-  ctx.body = orders;
+  ctx.body = await dbQuery.getOrders(ctx.user.id);
   return next();
 };
 

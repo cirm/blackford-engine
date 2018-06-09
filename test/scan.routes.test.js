@@ -12,9 +12,9 @@ describe('routes: /scan', () => {
 
   test('Scan player', async () => {
     const authentication = await createTestUser(adminToken);
-    const response = await fetch(`${server}/api/v1/decker/scan/player/1`, { headers: { authentication } }).then(res => res.json());
+    const response = await fetch(`${server}/api/v1/decker/scan/player/8`, { headers: { authentication } }).then(res => res.json());
     expect(response).toEqual({
-      decker: 'bakufu', humanity: 9, level: 6, misc: { bio: 'TBD' },
+      decker: 'bakufu', humanity: 10, level: 1, misc: { bio: 'TBD' },
     });
   });
   test('scan mob', async () => {
@@ -26,7 +26,7 @@ describe('routes: /scan', () => {
   test('scan node', async () => {
     const authentication = await createTestUser(adminToken);
     const response = await fetch(`${server}/api/v1/decker/scan/node/3`, { headers: { authentication } }).then(res => res.json());
-    expect(response).toEqual({ active: true, level: 5, owner: 'bakufu' });
+    expect(response).toEqual({ active: true, level: 5, owner: 'unclaimed' });
   });
 
   test('scan object', async () => {

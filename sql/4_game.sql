@@ -17,10 +17,10 @@ create table game.events(
 create table game.log(
 	id SERIAL PRIMARY KEY,
 	timestamp TIMESTAMPTZ,
-	player_id INTEGER,
+	decker_id INTEGER,
 	event_id INTEGER,
 	value INTEGER,
-	FOREIGN KEY (player_id) REFERENCES decker.players(id),
+	FOREIGN KEY (decker_id) REFERENCES characters.deckers(id),
 	FOREIGN KEY (event_id) REFERENCES game.events(id)
 );
 
@@ -31,13 +31,13 @@ create table game.objects(
 	value INT
 );
 
-create table game.player2objects(
+create table game.decker2objects(
 	id SERIAL PRIMARY KEY,
 	object_id INT,
-	player_id INT,
+	decker_id INT,
 	FOREIGN KEY (object_id) REFERENCES game.objects(id),
-	FOREIGN KEY (player_id) REFERENCES decker.players(id),
-	UNIQUE (object_id, player_id)
+	FOREIGN KEY (decker_id) REFERENCES characters.deckers(id),
+	UNIQUE (object_id, decker_id)
 );
 
 create table game.nodes(
@@ -45,7 +45,7 @@ create table game.nodes(
 	active BOOLEAN NOT NULL,
 	owner INT,
 	level INT NOT NULL,
-	FOREIGN KEY (owner) REFERENCES decker.players(id)
+	FOREIGN KEY (owner) REFERENCES characters.deckers(id)
 );
 
 create table game.mobs(
@@ -55,18 +55,3 @@ create table game.mobs(
 	meta VARCHAR(100)
 );
 
-INSERT INTO game.mobs (level, bounty, meta) VALUES
-(1, 1000, 'It is a big fucken animal'),
-(2, 4000, 'It is a big fucken mob'),
-(3, 8000, 'Bakufu has arrived');
-
-INSERT INTO game.objects (type, meta, value) VALUES
-('movable', 'magnetic vase', 100),
-('static', 'random cypher', 200),
-('movable', 'a big box', 500),
-('movable','datalog from the 20th century', 10000);
-
-INSERT INTO game.nodes (active, owner, level) VALUES 
-('true', null, 1),
-('false', 1, 5),
-('true', 1, 5);
