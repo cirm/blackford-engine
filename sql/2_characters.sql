@@ -58,7 +58,8 @@ CREATE OR REPLACE FUNCTION characters.buy_upgrade(
 
  OUT text VARCHAR(20),
  OUT order_id INT,
- OUT status BOOLEAN
+ OUT status BOOLEAN,
+ OUT upgrade_type INT
 ) AS 
 $BODY$
 DECLARE
@@ -66,10 +67,11 @@ DECLARE
 	_upgrade_price INT;
 	_upgrade_multiplier INT;
 	_final_price INT;
+	_upgrade_type INT;
 	_count INT;
 BEGIN
 SELECT wallet INTO _wallet FROM characters.deckers WHERE id = i_decker_id;
-SELECT cost, multiplier INTO _upgrade_price, _upgrade_multiplier FROM characters.upgrades WHERE id = i_upgrade_id;
+SELECT cost, multiplier, type INTO _upgrade_price, _upgrade_multiplier, _upgrade_type FROM characters.upgrades WHERE id = i_upgrade_id;
 _count := (SELECT count(upgrade_id) FROM characters.orders WHERE decker_id = i_decker_id and upgrade_id = i_upgrade_id);
 IF _count = 0 THEN _final_price:= _upgrade_price; ELSE _final_price := _count * _upgrade_multiplier * _upgrade_price;
 END IF;
@@ -79,6 +81,7 @@ UPDATE characters.deckers SET wallet =_wallet - _final_price WHERE id = i_decker
 INSERT INTO characters.orders (timestamp, ammount, wallet_statement, upgrade_id, decker_id, status) VALUES (now(), _final_price, _wallet, i_upgrade_id, i_decker_id, 0 ) RETURNING id INTO order_id;
 text:= 'Payment Successful';
 status:=TRUE;
+upgrade_type:=_upgrade_type;
 END IF;
 END;
 $BODY$
@@ -93,7 +96,7 @@ CREATE OR REPLACE FUNCTION account.get_account_data(
     OUT ROLES VARCHAR(25)[]
 ) AS $BODY$
 SELECT
-        aa.id,
+        cd.id,
         cd.decker,
         aa.hpassword,
         (SELECT ARRAY((SELECT ar.name FROM account.roles ar WHERE ar.id IN (SELECT apr.role_id FROM account.player_roles apr WHERE apr.account_id = aa.id)))) as roles

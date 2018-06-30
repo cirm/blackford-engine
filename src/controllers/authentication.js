@@ -1,12 +1,26 @@
+const Promise = require('bluebird');
+const JWT = Promise.promisifyAll(require('jsonwebtoken'));
 const { getAuthData } = require('../db/decker');
 const bcrypt = require('../utilities/bcrypt');
 const TokenService = require('../utilities/tokenService');
 const { tokenSecret, tokenOptions } = require('../config');
 const logger = require('../utilities/winston');
-const Promise = require('bluebird');
-const JWT = Promise.promisifyAll(require('jsonwebtoken'));
 const { asyncPipe } = require('../utilities/functional');
 
+const AuthError = (message, params, status = 401) => {
+  const err = new Error(message);
+  err.status = status;
+  err.expose = 'Wrong username or password';
+  if (params) { err.params = params; }
+  throw err;
+};
+const TokenError = (message, params, status = 401) => {
+  const err = new Error(message);
+  err.status = status;
+  err.expose = 'Missing or malformed Token';
+  if (params) { err.params = params; }
+  throw err;
+};
 
 const generateApiToken = ({ id, username, roles }) => JWT.signAsync({
   id,
@@ -16,24 +30,25 @@ const generateApiToken = ({ id, username, roles }) => JWT.signAsync({
 
 const parseUserFromBody = ({ request }) => ({ auth: request.body } || {});
 const validateRawFields = (user) => {
-  if (!user.auth.password || !user.auth.username) throw new Error('Missing required authentication payload for incoming request');
+  if (!user.auth.password || !user.auth.username) AuthError('Missing required authentication payload for incoming request');
   return user;
 };
 const getExistingUser = async (user) => {
   const result = await getAuthData(user.auth.username);
-  if (!result) throw new Error(`Unknown user authentication request for ${user.auth.username}`);
+  if (!result || !result.id) AuthError(`Unknown user authentication request for ${user.auth.username}`);
   return ({ ...user, db: result });
 };
 
 const validatePassword = async (user) => {
   const isAllowed = await bcrypt.compareHash(user.auth.password, user.db.hpassword);
-  if (!isAllowed) throw new Error(`Wrong password for username: ${user.auth.username} `);
+  if (!isAllowed) AuthError(`Wrong password for username: ${user.auth.username} `);
   return user;
 };
 
-const generateChatToken = user =>
-  ({ ...user, chatToken: TokenService.generate(user.auth.username, user.auth.device).toJwt() });
-
+const generateChatToken = user => ({
+  ...user,
+  chatToken: TokenService.generate(user.auth.username, user.auth.device).toJwt(),
+});
 
 const formatApiResponseBody = async ({ auth, db }) => ({
   identity: auth.username,
@@ -59,18 +74,7 @@ const getAuthTokens = asyncPipe(
 );
 
 const getTokens = async (ctx, next) => {
-  try {
-    ctx.body = await getAuthTokens(ctx);
-  } catch (e) {
-    logger.error(e.toString());
-    ctx.body = {
-      error: 'Wrong username or password',
-      code: 401,
-    };
-    ctx.status = 401;
-    return ctx;
-  }
-  return next();
+  ctx.body = await getAuthTokens(ctx);
 };
 
 const getApiToken = asyncPipe(
@@ -82,18 +86,7 @@ const getApiToken = asyncPipe(
 );
 
 const getGameToken = async (ctx, next) => {
-  try {
-    ctx.body = await getApiToken(ctx);
-  } catch (e) {
-    logger.error(e.toString());
-    ctx.body = {
-      error: 'Wrong username or password',
-      code: 401,
-    };
-    ctx.status = 401;
-    return ctx;
-  }
-  return next();
+  ctx.body = await getApiToken(ctx);
 };
 
 const parseTokenFromBody = ({ request }) => ({ tokens: request.body } || {});
@@ -104,10 +97,14 @@ const logRequest = (payload) => {
 };
 
 const verifyToken = async ({ tokens }) => {
-  const { username, id, roles } = await JWT.verifyAsync(tokens.apiToken, tokenSecret);
-  return {
-    ...tokens, auth: { username, device: 'browser' }, username, id, roles,
-  };
+  try {
+    const { username, id, roles } = await JWT.verifyAsync(tokens.apiToken, tokenSecret);
+    return {
+      ...tokens, auth: { username, device: 'browser' }, username, id, roles,
+    };
+  } catch (e) {
+    TokenError(e.message);
+  }
 };
 
 const formatRenewalResponseBody = async ({
@@ -129,15 +126,7 @@ const renewTokens = asyncPipe(
 );
 
 const renewToken = async (ctx, next) => {
-  try {
-    ctx.body = await renewTokens(ctx);
-  } catch (e) {
-    logger.error(e.toString());
-    ctx.status = 404;
-    ctx.body = { error: 'Missing or malformed Token', code: 401 };
-    return ctx;
-  }
-  return next();
+  ctx.body = await renewTokens(ctx);
 };
 
 module.exports = {

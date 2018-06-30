@@ -1,6 +1,5 @@
-const { scanMap } = require('../mappings');
 const { query } = require('../db');
-const { sendToQueue } = require('../mq');
+const { reccordObjectScan } = require('../db/scan');
 
 const readError = (ctx) => {
   ctx.body = {
@@ -41,7 +40,7 @@ const readMob = async (ctx, next) => {
 const readItem = async (ctx, next) => {
   const { rows } = await query('SELECT type, meta, value FROM game.objects WHERE id = $1', [ctx.params.id]);
   if (!rows.length) return readError(ctx);
-  if (rows[0].value) await sendToQueue('objects', { decker: ctx.user.id, item: ctx.params.id, value: rows[0].value });
+  if (rows[0].value) await reccordObjectScan(ctx.user.id, ctx.params.id, rows[0].value);
   ctx.body = {
     type: rows[0].type,
     meta: rows[0].meta,

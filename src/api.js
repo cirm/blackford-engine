@@ -31,9 +31,11 @@ api
 
   .get('/api/v1/decker/scan/:type/:id', scan.readItem) // scan something
   .get('/api/v1/decker/unplug/:playerId', decker.nukeDecker) // kill player
-  .get('/api/v1/decker/ravage/:playerId') // kill player & loot
+  .get('/api/v1/decker/mob/:mobId', decker.nukeMob) // kill & loot mob
+  .get('/api/v1/decker/ravage/:playerId', decker.ravageDecker) // kill player & loot
+  .post('/api/v1/admin/purge/:deckerId', decker.purgeDecker)
   .post('/api/v1/decker/nodes/:nodeId') // hack node
-  .post('/api/v1/decker/mob/:mobId') // kill & loot mob
+
 
   .get('/api/v1/decker/products', character.getProducts) // get all products
   .get('/api/v1/decker/orders', character.getOrdersForUser) // get characters orders

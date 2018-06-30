@@ -1,3 +1,5 @@
+// @flow
+
 const orderStatus = {
   0: 'CREATED',
   1: 'COMPLETED',

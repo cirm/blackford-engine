@@ -1,4 +1,3 @@
-
 INSERT INTO account.roles (name) VALUES
     ('decker'),
     ('admin'),
@@ -27,12 +26,11 @@ INSERT INTO game.objects (type, meta, value) VALUES
 ('movable', 'a big box', 500),
 ('movable','datalog from the 20th century', 10000);
 
-INSERT INTO game.nodes (active, owner, level) VALUES 
-('true', null, 1),
-('false', null, 5),
-('true', null, 5);
-
 INSERT INTO account.authentication (hpassword) VALUES ('$2a$11$kU3NTUGBlybcDbMOre8MXe2rU7i/5WEtlytm0kw07gTkyif.phEhy');
 SELECT * FROM characters.create_decker(1, 'bakufu');
 
-insert into account.player_roles (account_id, role_id) VALUES (1, 1), (1, 2);
+INSERT INTO account.player_roles (account_id, role_id) VALUES (1, 1), (1, 2);
+INSERT INTO game.nodes (active, owner, level) VALUES 
+('true', 1, 1),
+('false', null, 5),
+('true', null, 5);

@@ -1,7 +1,7 @@
-const db = require('../db');
+const db = require('./index');
 const logger = require('../utilities/winston');
 
-const handleObjectScan = async (user, value, item) => {
+const reccordObjectScan = async (user, item, value) => {
   const { rows } = await db.query('SELECT * FROM game.decker2objects WHERE decker_id = $1 AND object_id = $2', [user, item]);
   if (!rows.lentgh) {
     try {
@@ -12,20 +12,12 @@ const handleObjectScan = async (user, value, item) => {
     } catch (e) {
       await db.query('ROLLBACK');
       logger.error(e);
+      throw new Error('Error while scanning');
     }
   }
 };
 
-const objectConsumer = async (msg, ch) => {
-  const mqPayload = JSON.parse(msg.content.toString('utf8').trim());
-  try {
-    await handleObjectScan(mqPayload.decker, mqPayload.value, mqPayload.item);
-    ch.ack(msg);
-  } catch (e) {
-    logger.error(e);
-  }
+module.exports = {
+  reccordObjectScan,
 };
 
-module.exports = {
-  objectConsumer,
-};

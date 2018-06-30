@@ -1,3 +1,5 @@
+// @flow
+
 const { Pool } = require('pg').native;
 const logger = require('../utilities/winston');
 
@@ -10,7 +12,7 @@ const config = {
 
 const pool = new Pool(config);
 
-const query = async (text, params) => {
+const query = async (text: string, params: ?Array<mixed>) => {
   const start = Date.now();
   try {
     const result = await pool.query(text, params);
@@ -28,4 +30,3 @@ const query = async (text, params) => {
 module.exports = {
   query,
 };
-

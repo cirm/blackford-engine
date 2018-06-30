@@ -1,9 +1,6 @@
+const Promise = require('bluebird');
 const dbQuery = require('../db/decker');
 const adminQuery = require('../db/admin');
-const mq = require('../mq/index');
-const Promise = require('bluebird');
-
-const eventQueue = 'exploration';
 
 const errorResponse = async (ctx, reason) => {
   ctx.status = 401;
@@ -12,9 +9,9 @@ const errorResponse = async (ctx, reason) => {
     error: 'Unauthorized',
     message: reason,
   };
-  await mq.sendToQueue(eventQueue, {
-    requestId: ctx.req.headers['x-blackford-request-id'], deckerId: ctx.user.id, roomId: ctx.params.id, timestamp: new Date(), timeout: 0, event: 'rejection',
-  });
+  //  await mq.sendToQueue(eventQueue, {
+  //  requestId: ctx.req.headers['x-blackford-request-id'], deckerId: ctx.user.id, roomId: ctx.params.id, timestamp: new Date(), timeout: 0, event: 'rejection',
+  // });
   return ctx;
 };
 
@@ -47,9 +44,9 @@ const enterRoom = async (ctx, next) => {
   const timestamp = new Date();
   const payload = [ctx.user.id, ctx.params.id, timestamp];
   await dbQuery.enterRoom(...payload);
-  await mq.sendToQueue(eventQueue, {
-    requestId: ctx.req.headers['x-blackford-request-id'], deckerId: ctx.user.id, roomId: ctx.params.id, timestamp, timeout: zone.timeout, event: 'enteroom',
-  });
+  // await mq.sendToQueue(eventQueue, {
+  // requestId: ctx.req.headers['x-blackford-request-id'], deckerId: ctx.user.id, roomId: ctx.params.id, timestamp, timeout: zone.timeout, event: 'enteroom',
+  // });
   ctx.body = { status: 'Entry granted', entry: timestamp, timeout: new Date(timestamp.getTime() + (zone.timeout * 1000)) };
   return next();
 };

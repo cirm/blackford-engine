@@ -1,3 +1,4 @@
+// @flow
 const winston = require('winston');
 const moment = require('moment');
 
@@ -20,7 +21,7 @@ const logger = new winston.Logger({
  * Use winston as middleware log stream
  * @param {string} message Message to log
  */
-const write = message => logger.info(message.slice(0, -1));
+const write = (message: string) => logger.info(message.slice(0, -1));
 
 module.exports = logger;
 module.exports.stream = {

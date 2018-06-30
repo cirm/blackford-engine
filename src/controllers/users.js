@@ -11,7 +11,7 @@ const getAllUsers = async (ctx, next) => {
 const createUser = async (ctx, next) => {
   const username = ctx.request.body.user
     ? ctx.request.body.user
-    : `test_user_${Math.floor(Math.random() * 8999) + 1000}`;
+    : `decker_${Math.floor(Math.random() * 899) + 100}_${Date.now()}`;
   const password = ctx.request.body.user
     ? await bcrypt.hashpassword(ctx.request.body.password)
     : '$2a$11$wUwXkDTesHKL4iz6C8aycuEJ9PpeawmhOY2yfMWNu0CWnKA/y/qVG'; // zeGermans

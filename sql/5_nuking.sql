@@ -24,3 +24,15 @@ create table characters.kills (
 	FOREIGN KEY (location) REFERENCES exploration.zones(id),
 	FOREIGN KEY (killer) REFERENCES characters.deckers(id)
 );
+
+create table characters.purges (
+	id SERIAL PRIMARY KEY,
+	decker INT NOT NULL,
+	decker_level INT NOT NULL,
+	mob INT NOT NULL,
+	location INT NOT NULL,
+	timestamp TIMESTAMPTZ NOT NULL,
+	FOREIGN KEY (mob) REFERENCES game.mobs(id),
+	FOREIGN KEY (location) REFERENCES exploration.zones(id),
+	FOREIGN KEY (decker) REFERENCES characters.deckers(id)
+);

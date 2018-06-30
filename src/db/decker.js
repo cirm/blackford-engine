@@ -20,8 +20,7 @@ const getZoneInfo = async (zoneId) => {
   const { rows } = await query('SELECT zone_cap, zone_level, open, zone_timeout FROM exploration.zones WHERE id = $1;', [zoneId]);
   if (rows.length === 0) return {};
   const timeout = Object.keys(rows[0].zone_timeout)
-    .reduce((total, key) =>
-      total + (rows[0].zone_timeout[key] * timeMap[key]), 0);
+    .reduce((total, key) => total + (rows[0].zone_timeout[key] * timeMap[key]), 0);
   return {
     isOpen: rows[0].open,
     level: rows[0].zone_level,
@@ -69,4 +68,3 @@ module.exports = {
   getProducts,
   buyUpgradeForDecker,
 };
-
