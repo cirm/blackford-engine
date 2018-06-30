@@ -29,38 +29,39 @@ const generateApiToken = ({ id, username, roles }) => JWT.signAsync({
 }, tokenSecret, { expiresIn: tokenOptions.expiresIn });
 
 const parseUserFromBody = ({ request }) => ({ auth: request.body } || {});
-const validateRawFields = (user) => {
-  if (!user.auth.password || !user.auth.username) AuthError('Missing required authentication payload for incoming request');
-  return user;
+const validateRawFields = ({ auth, ...rest }) => {
+  if (!auth.password || !auth.username) AuthError('Missing required authentication payload for incoming request');
+  return { auth, ...rest };
 };
-const getExistingUser = async (user) => {
-  const result = await getAuthData(user.auth.username);
-  if (!result || !result.id) AuthError(`Unknown user authentication request for ${user.auth.username}`);
-  return ({ ...user, db: result });
-};
-
-const validatePassword = async (user) => {
-  const isAllowed = await bcrypt.compareHash(user.auth.password, user.db.hpassword);
-  if (!isAllowed) AuthError(`Wrong password for username: ${user.auth.username} `);
-  return user;
+const getExistingUser = async ({ auth, ...rest }) => {
+  const resp = await getAuthData(auth.username);
+  if (!resp || !resp.id) AuthError(`Unknown user authentication request for ${auth.username}`);
+  return ({ auth, user: resp, ...rest });
 };
 
-const generateChatToken = user => ({
-  ...user,
-  chatToken: TokenService.generate(user.auth.username, user.auth.device).toJwt(),
+const validatePassword = async ({ auth, user, ...rest }) => {
+  const isAllowed = await bcrypt.compareHash(auth.password, user.hpassword);
+  if (!isAllowed) AuthError(`Wrong password for username: ${auth.username} `);
+  return { auth, user, ...rest };
+};
+
+const generateChatToken = ({ auth, ...rest }) => ({
+  ...rest,
+  auth,
+  chatToken: TokenService.generate(auth.username, auth.device).toJwt(),
 });
 
-const formatApiResponseBody = async ({ auth, db }) => ({
+const formatApiResponseBody = async ({ auth, user }) => ({
   identity: auth.username,
-  apiToken: await generateApiToken(db),
-  roles: db.roles,
-  id: db.id,
+  apiToken: await generateApiToken(user),
+  roles: user.roles,
+  id: user.id,
 });
-const formatResponseBody = async ({ auth, db, chatToken }) => ({
+const formatResponseBody = async ({ auth, user, chatToken }) => ({
   identity: auth.username,
-  apiToken: await generateApiToken(db),
-  roles: db.roles,
-  id: db.id,
+  apiToken: await generateApiToken(user),
+  roles: user.roles,
+  id: user.id,
   chatToken,
 });
 
@@ -73,7 +74,7 @@ const getAuthTokens = asyncPipe(
   formatResponseBody,
 );
 
-const getTokens = async (ctx, next) => {
+const getTokens = async (ctx) => {
   ctx.body = await getAuthTokens(ctx);
 };
 
@@ -85,16 +86,17 @@ const getApiToken = asyncPipe(
   formatApiResponseBody,
 );
 
-const getGameToken = async (ctx, next) => {
+const getGameToken = async (ctx) => {
   ctx.body = await getApiToken(ctx);
 };
 
 const parseTokenFromBody = ({ request }) => ({ tokens: request.body } || {});
 
-const logRequest = (payload) => {
-  logger.debug(`Renewal for: ${payload.tokens.apiToken}`);
-  return payload;
+const logRequest = ({ tokens, ...rest }) => {
+  logger.debug(`Renewal for: ${tokens.apiToken}`);
+  return { tokens, ...rest };
 };
+
 
 const verifyToken = async ({ tokens }) => {
   try {
@@ -103,7 +105,7 @@ const verifyToken = async ({ tokens }) => {
       ...tokens, auth: { username, device: 'browser' }, username, id, roles,
     };
   } catch (e) {
-    TokenError(e.message);
+    return TokenError(e.message);
   }
 };
 
@@ -125,7 +127,7 @@ const renewTokens = asyncPipe(
   formatRenewalResponseBody,
 );
 
-const renewToken = async (ctx, next) => {
+const renewToken = async (ctx) => {
   ctx.body = await renewTokens(ctx);
 };
 

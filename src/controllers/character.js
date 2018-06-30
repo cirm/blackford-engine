@@ -1,39 +1,43 @@
 const dbQuery = require('../db/decker');
-const logger = require('../utilities/winston');
 const { handleUpgrade } = require('../db/upgrades');
 const { asyncPipe } = require('../utilities/functional');
 
-const getCharSheet = async (ctx, next) => {
+const ValidationError = (message, params, status = 401) => {
+  const err = new Error(message);
+  err.status = status;
+  err.expose = 'Missing required params';
+  if (params) { err.params = params; }
+  throw err;
+};
+
+const getCharSheet = async (ctx) => {
   ctx.body = await dbQuery.getCharForUser(ctx.user.id);
-  return next();
 };
 
-const getProducts = async (ctx, next) => {
+const getProducts = async (ctx) => {
   ctx.body = await dbQuery.getProducts();
-  return next();
 };
 
-const getOrdersForUser = async (ctx, next) => {
+const getOrdersForUser = async (ctx) => {
   ctx.body = await dbQuery.getOrders(ctx.user.id);
-  return next();
 };
 
 const parseParametersFromRequest = ({ user, params }) => {
-  if (!user || !params) throw new Error('Missing required params');
-  if (!user.id || !params.productId) throw new Error('Missing required params');
+  if (!user || !params) return ValidationError('Missing required params');
+  if (!user.id || !params.productId) return ValidationError('Missing required params');
   return { data: { decker: user.id, product: params.productId } };
 };
 
-const buyTheUpgrade = async (payload) => {
-  const result = await dbQuery.buyUpgradeForDecker(payload.data.decker, payload.data.product);
-  return ({ ...payload, result });
+const buyTheUpgrade = async ({ data, ...rest }) => {
+  const result = await dbQuery.buyUpgradeForDecker(data.decker, data.product);
+  return ({ ...rest, data, result });
 };
 
-const provisionUpgrade = async (payload) => {
-  if (payload.result.status) {
-    await handleUpgrade(payload.data.decker, payload.result.upgrade_type, payload.result.order_id);
+const provisionUpgrade = async ({ result, data, ...rest }) => {
+  if (result.status) {
+    await handleUpgrade(data.decker, result.upgrade_type, result.order_id);
   }
-  return payload;
+  return { result, data, ...rest };
 };
 
 const formatResponse = ({ result }) => ({
@@ -49,14 +53,8 @@ const buyProduct1 = asyncPipe(
   formatResponse,
 );
 
-const buyProduct = async (ctx, next) => {
-  try {
-    ctx.body = await buyProduct1(ctx);
-  } catch (e) {
-    logger.error(e);
-    ctx.body = 'Payment Failure';
-  }
-  return next();
+const buyProduct = async (ctx) => {
+  ctx.body = await buyProduct1(ctx);
 };
 
 module.exports = {
