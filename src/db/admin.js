@@ -1,7 +1,7 @@
-const { query } = require('./index');
+const Promise = require('bluebird');
+const { query, first } = require('./index');
 const logger = require('../utilities/winston');
 const { timeMap } = require('../mappings');
-const Promise = require('bluebird');
 
 const findLaggingDeckers = async () => {
   const { rows } = await query('SELECT * FROM exploration.active_room_timeouts();');
@@ -38,25 +38,17 @@ const createUser = async (decker, hpassword) => {
     if (rows) {
       const response = await Promise.all([
         query('INSERT INTO account.player_roles (account_id, role_id) VALUES ($1, 2)', [rows[0].id]), // decker role
-        query('SELECT * FROM characters.create_decker($1, $2)', [rows[0].id, decker]),
+        query('SELECT * FROM characters.create_decker($1, $2)', [rows[0].id, decker]).then(first),
       ]);
-      return response[1].rows[0];
+      return response[1];
     }
   } catch (e) {
     logger.error(e);
-    return e;
+    throw e;
   }
 };
 
-const provisionBudget = async (userId, ammount = 1000) => {
-  try {
-    const { rows } = await query('UPDATE characters.deckers SET wallet = $2 WHERE id = $1 RETURNING wallet, id;', [userId, ammount]);
-    return rows[0];
-  } catch (e) {
-    logger.error(e);
-    return e;
-  }
-};
+const provisionBudget = async (userId, ammount = 1000) => query('UPDATE characters.deckers SET wallet = $2 WHERE id = $1 RETURNING wallet, id;', [userId, ammount]).then(first);
 
 module.exports = {
   findLaggingDeckers,

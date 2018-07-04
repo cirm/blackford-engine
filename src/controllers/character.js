@@ -1,5 +1,11 @@
+// @flow
 const dbQuery = require('../db/decker');
-const { handleUpgrade } = require('../db/upgrades');
+const {
+  all, query, first,
+} = require('../db');
+const {
+  handleUpgrade,
+} = require('../db/upgrades');
 const { asyncPipe } = require('../utilities/functional');
 
 const ValidationError = (message, params, status = 401) => {
@@ -11,15 +17,15 @@ const ValidationError = (message, params, status = 401) => {
 };
 
 const getCharSheet = async (ctx) => {
-  ctx.body = await dbQuery.getCharForUser(ctx.user.id);
+  ctx.body = await query(dbQuery.getCharForUser, [ctx.user.id]).then(first);
 };
 
 const getProducts = async (ctx) => {
-  ctx.body = await dbQuery.getProducts();
+  ctx.body = await query(dbQuery.getProducts).then(all);
 };
 
 const getOrdersForUser = async (ctx) => {
-  ctx.body = await dbQuery.getOrders(ctx.user.id);
+  ctx.body = await query(dbQuery.getOrders, [ctx.user.id]).then(all);
 };
 
 const parseParametersFromRequest = ({ user, params }) => {
@@ -29,7 +35,7 @@ const parseParametersFromRequest = ({ user, params }) => {
 };
 
 const buyTheUpgrade = async ({ data, ...rest }) => {
-  const result = await dbQuery.buyUpgradeForDecker(data.decker, data.product);
+  const result = await query(dbQuery.buyUpgradeForDecker, [data.decker, data.product]).then(first);
   return ({ ...rest, data, result });
 };
 

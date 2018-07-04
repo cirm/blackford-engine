@@ -1,8 +1,13 @@
+// @flow
 const { query } = require('./index');
 const { timeMap } = require('../mappings');
 
-const getAuthData = async (username) => {
-  const { rows } = await query('SELECT * from account.get_account_data($1)', [username]);
+const getUserAccount = 'SELECT * FROM account.get_account_data($1);';
+// const getPlayer = 'SELECT level FROM characters.deckers WHERE id = $1';
+const getProducts = 'SELECT id, name, value FROM characters.upgrades;';
+
+const getAuthData = async (username, dbq) => {
+  const { rows } = await dbq('SELECT * from account.get_account_data($1)', [username]);
   return rows[0];
 };
 
@@ -36,27 +41,18 @@ const isZoneCapOpen = async (zoneId, zoneCap) => {
 
 const enterRoom = async (deckerId, roomId, timestamp) => query('SELECT exploration.enter_room($1, $2, $3);', [deckerId, roomId, timestamp]);
 
-const getCharForUser = async (username) => {
-  const { rows } = await query('SELECT cs.humanity, cs.wallet, cs.id, cs.level, cs.decker FROM characters.deckers cs WHERE id = $1', [username]);
-  return rows[0];
-};
+const getCharForUser = 'SELECT cs.humanity, cs.wallet, cs.id, cs.level, cs.decker FROM characters.deckers cs WHERE id = $1';
 
-const getProducts = async () => {
-  const { rows } = await query('SELECT id, name, value FROM characters.upgrades;');
+const getProducts1 = async (dbq) => {
+  const { rows } = await dbq('SELECT id, name, value FROM characters.upgrades;');
   return rows;
 };
 
-const getOrders = async (username) => {
-  const { rows } = await query('SELECT * FROM characters.orders where decker_id = $1', [username]);
-  return rows;
-};
-
-const buyUpgradeForDecker = async (username, productId) => {
-  const { rows } = await query('SELECT * FROM characters.buy_upgrade($1, $2);', [username, productId]);
-  return rows[0];
-};
+const getOrders = 'SELECT * FROM characters.orders where decker_id = $1';
+const buyUpgradeForDecker = 'SELECT * FROM characters.buy_upgrade($1, $2);';
 
 module.exports = {
+  getProducts,
   getPlayer,
   getZoneInfo,
   isZoneCapOpen,
@@ -65,6 +61,5 @@ module.exports = {
   getCharForUser,
   enterRoom,
   getOrders,
-  getProducts,
   buyUpgradeForDecker,
 };

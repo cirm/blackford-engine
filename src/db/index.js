@@ -12,21 +12,21 @@ const config = {
 
 const pool = new Pool(config);
 
-const query = async (text: string, params: ?Array<mixed>) => {
+const query = async (text: string, params: ?Array<mixed> = []) => {
   const start = Date.now();
-  try {
-    const result = await pool.query(text, params);
-    const duration = `${Date.now() - start} ms`;
-    logger.debug('executed query', {
-      query: text, duration, rows: result.rowCount, params,
-    });
-    return result;
-  } catch (e) {
-    logger.error('Error executing query.', { error: e, query: text, params });
-    return { error: e };
-  }
+  const result = await pool.query(text, params);
+  const duration = `${Date.now() - start} ms`;
+  logger.debug('executed query', {
+    query: text, duration, rows: result.rowCount, params,
+  });
+  return result;
 };
+
+const first = ({ rows }) => rows[0];
+const all = ({ rows }) => rows;
 
 module.exports = {
   query,
+  all,
+  first,
 };

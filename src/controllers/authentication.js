@@ -28,15 +28,17 @@ const generateApiToken = ({ id, username, roles }) => JWT.signAsync({
   roles,
 }, tokenSecret, { expiresIn: tokenOptions.expiresIn });
 
-const parseUserFromBody = ({ request }) => ({ auth: request.body } || {});
+const parseUserFromBody = ({ request, db }) => ({ auth: request.body, db } || {});
 const validateRawFields = ({ auth, ...rest }) => {
   if (!auth.password || !auth.username) AuthError('Missing required authentication payload for incoming request');
   return { auth, ...rest };
 };
-const getExistingUser = async ({ auth, ...rest }) => {
-  const resp = await getAuthData(auth.username);
+const getExistingUser = async ({ auth, db, ...rest }) => {
+  const resp = await getAuthData(auth.username, db.query);
   if (!resp || !resp.id) AuthError(`Unknown user authentication request for ${auth.username}`);
-  return ({ auth, user: resp, ...rest });
+  return ({
+    auth, user: resp, ...rest, db,
+  });
 };
 
 const validatePassword = async ({ auth, user, ...rest }) => {
