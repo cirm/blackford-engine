@@ -2,10 +2,8 @@ const { query, all } = require('../db');
 const dbQuery = require('../db/admin');
 const bcrypt = require('../utilities/bcrypt');
 
-const getAllUsers = async (ctx, next) => {
-  ctx.body = await db.query('SELECT dp.id, dp.username, dp.visited, array_agg(dr.name) AS roles FROM decker.players dp, decker.roles dr, decker.player_roles dpr WHERE dp.id = dpr.player_id and dpr.role_id = dr.id GROUP BY dp.username, dp.visited, dp.id').then(all);
-  ctx.body = users.rows;
-  return next();
+const getAllUsers = async (ctx) => {
+  ctx.body = await query('SELECT dp.id, dp.username, dp.visited, array_agg(dr.name) AS roles FROM decker.players dp, decker.roles dr, decker.player_roles dpr WHERE dp.id = dpr.player_id and dpr.role_id = dr.id GROUP BY dp.username, dp.visited, dp.id').then(all);
 };
 
 const createUser = async (ctx, next) => {
