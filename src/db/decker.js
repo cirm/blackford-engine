@@ -37,10 +37,7 @@ const enterRoom = async (deckerId, roomId, timestamp) => query('SELECT explorati
 
 const getCharForUser = 'SELECT cs.humanity, cs.wallet, cs.id, cs.level, cs.decker FROM characters.deckers cs WHERE id = $1';
 
-const getProducts1 = async (dbq) => {
-  const { rows } = await dbq('SELECT id, name, value FROM characters.upgrades;');
-  return rows;
-};
+const getProducts1 = async dbq => dbq('SELECT id, name, value FROM characters.upgrades;').then(all);
 
 const getOrders = 'SELECT * FROM characters.orders where decker_id = $1';
 const buyUpgradeForDecker = 'SELECT * FROM characters.buy_upgrade($1, $2);';

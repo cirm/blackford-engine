@@ -17,9 +17,12 @@ const logPK = async (killer, klevel, victim, vlevel, location, loot) => {
   }
 };
 
-const logPurge = async (payload) => {
-  console.log('log purge');
-  console.log(payload);
+const logPurge = async (decker, dLevel, mobId, location) => {
+  try {
+    await query('INSERT INTO characters.purges (decker, decker_level, mob, location, timestamp) VALUES ($1, $2, $3, $4, now());', [decker, dLevel, mobId, location]);
+  } catch (e) {
+    logger.error(e);
+  }
 };
 
 
