@@ -33,8 +33,8 @@ api
   .get('/api/v1/decker/unplug/:playerId', decker.nukeDecker) // kill player
   .get('/api/v1/decker/mob/:mobId', decker.nukeMob) // kill & loot mob
   .get('/api/v1/decker/ravage/:playerId', decker.ravageDecker) // kill player & loot
-  .post('/api/v1/admin/purge/:deckerId', decker.purgeDecker)
-  .post('/api/v1/decker/nodes/:nodeId') // hack node
+  .post('/api/v1/admin/purge/:deckerId', decker.purgeDecker) // mob kills decker
+  .post('/api/v1/decker/nodes/:nodeId') // hack node #TODO
 
 
   .get('/api/v1/decker/products', character.getProducts) // get all products
@@ -42,7 +42,7 @@ api
   .post('/api/v1/decker/products/:productId', character.buyProduct) // buy product
   .get('/api/v1/decker/character', character.getCharSheet) // get charsheet & stats
 
-  .post('/api/v1/decker/payments/')
+  .post('/api/v1/decker/payments/', character.sendMoney) // transfer money
 
   .get('/api/v1/monitor/gameState');
 

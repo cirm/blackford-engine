@@ -7,11 +7,20 @@ const {
   handleUpgrade,
 } = require('../db/upgrades');
 const { asyncPipe } = require('../utilities/functional');
+const logger = require('../utilities/winston');
 
 const ValidationError = (message, params, status = 401) => {
   const err = new Error(message);
   err.status = status;
   err.expose = 'Missing required params';
+  if (params) { err.params = params; }
+  throw err;
+};
+
+const BalanceError = (message, params, status = 401) => {
+  const err = new Error(message);
+  err.status = status;
+  err.expose = 'Failed to change Balance';
   if (params) { err.params = params; }
   throw err;
 };
@@ -49,6 +58,22 @@ const provisionUpgrade = async ({ result, data, ...rest }) => {
   return { result, data, ...rest };
 };
 
+const sendMoney = async (ctx) => {
+  const { ammount, recipient } = ctx.request.body;
+  const { wallet } = await ctx.db.query(dbQuery.getCharForUser, [ctx.user.id]).then(first);
+  if (wallet < ammount) BalanceError('Not enough Balance');
+  if (ammount < 1) BalanceError('No negative transfers');
+  try {
+    ctx.db.transaction(
+      ['UPDATE characters.deckers SET wallet = wallet -$2 WHERE id = $1;', [ctx.user.id, ammount]],
+      ['UPDATE characters.deckers SET wallet = wallet +$2 WHERE id = $1;', [recipient, ammount]],
+    );
+  } catch (e) {
+    BalanceError('Transaction failed');
+  }
+  ctx.body = { status: 'Payment Successful' };
+};
+
 const formatResponse = ({ result }) => ({
   text: result.text,
   status: result.status,
@@ -71,4 +96,5 @@ module.exports = {
   getProducts,
   getOrdersForUser,
   buyProduct,
+  sendMoney,
 };
