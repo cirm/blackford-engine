@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 
 const { server, headers } = require('./helpers/test.conf');
-const { createTestUser } = require('./helpers/test.helpers');
+const { createTestUser, createTestUserWithId } = require('./helpers/test.helpers');
 
 let adminToken;
 
@@ -30,5 +30,57 @@ describe('routes: /characters', () => {
     const characterUp = await fetch(`${server}/api/v1/decker/character`, { headers: { ...headers, authentication } }).then(res => res.json());
     expect(characterUp.level).toEqual(2);
     expect(characterUp.wallet).toEqual(0);
+  });
+
+  test('transfer money between players', async () => {
+    const authentication = await createTestUser(adminToken);
+    const { apiToken, id } = await createTestUserWithId(adminToken);
+    const payment = await fetch(`${server}/api/v1/decker/payments/`, { method: 'POST', headers: { ...headers, authentication }, body: JSON.stringify({ ammount: 1000, recipient: id }) }).then(res => res.json());
+    expect(payment).toEqual({ status: 'Payment Successful' });
+    const sender = await fetch(`${server}/api/v1/decker/character`, { headers: { ...headers, authentication } }).then(res => res.json());
+    const receiver = await fetch(`${server}/api/v1/decker/character`, { headers: { ...headers, authentication: apiToken } }).then(res => res.json());
+    expect(sender.wallet).toEqual(0);
+    expect(receiver.wallet).toEqual(2000);
+  });
+
+  test('transfer money not enough money', async () => {
+    const authentication = await createTestUser(adminToken);
+    const { apiToken, id } = await createTestUserWithId(adminToken);
+    const payment = await fetch(`${server}/api/v1/decker/payments/`, { method: 'POST', headers: { ...headers, authentication }, body: JSON.stringify({ ammount: 1001, recipient: id }) }).then(res => res.json());
+    expect(payment).toEqual({ error: 'Failed to change Balance', status: 401 });
+    const sender = await fetch(`${server}/api/v1/decker/character`, { headers: { ...headers, authentication } }).then(res => res.json());
+    const receiver = await fetch(`${server}/api/v1/decker/character`, { headers: { ...headers, authentication: apiToken } }).then(res => res.json());
+    expect(sender.wallet).toEqual(1000);
+    expect(receiver.wallet).toEqual(1000);
+  });
+  test('transfer money - negative money', async () => {
+    const authentication = await createTestUser(adminToken);
+    const { apiToken, id } = await createTestUserWithId(adminToken);
+    const payment = await fetch(`${server}/api/v1/decker/payments/`, { method: 'POST', headers: { ...headers, authentication }, body: JSON.stringify({ ammount: -1001, recipient: id }) }).then(res => res.json());
+    expect(payment).toEqual({ error: 'Failed to change Balance', status: 401 });
+    const sender = await fetch(`${server}/api/v1/decker/character`, { headers: { ...headers, authentication } }).then(res => res.json());
+    const receiver = await fetch(`${server}/api/v1/decker/character`, { headers: { ...headers, authentication: apiToken } }).then(res => res.json());
+    expect(sender.wallet).toEqual(1000);
+    expect(receiver.wallet).toEqual(1000);
+  });
+  test('transfer money - undefined money', async () => {
+    const authentication = await createTestUser(adminToken);
+    const { apiToken, id } = await createTestUserWithId(adminToken);
+    const payment = await fetch(`${server}/api/v1/decker/payments/`, { method: 'POST', headers: { ...headers, authentication }, body: JSON.stringify({ ammount: undefined, recipient: id }) }).then(res => res.json());
+    expect(payment).toEqual({ error: 'Failed to change Balance', status: 401 });
+    const sender = await fetch(`${server}/api/v1/decker/character`, { headers: { ...headers, authentication } }).then(res => res.json());
+    const receiver = await fetch(`${server}/api/v1/decker/character`, { headers: { ...headers, authentication: apiToken } }).then(res => res.json());
+    expect(sender.wallet).toEqual(1000);
+    expect(receiver.wallet).toEqual(1000);
+  });
+  test('transfer money - formattable money', async () => {
+    const authentication = await createTestUser(adminToken);
+    const { apiToken, id } = await createTestUserWithId(adminToken);
+    const payment = await fetch(`${server}/api/v1/decker/payments/`, { method: 'POST', headers: { ...headers, authentication }, body: JSON.stringify({ ammount: '12.34', recipient: id }) }).then(res => res.json());
+    expect(payment).toEqual({ status: 'Payment Successful' });
+    const sender = await fetch(`${server}/api/v1/decker/character`, { headers: { ...headers, authentication } }).then(res => res.json());
+    const receiver = await fetch(`${server}/api/v1/decker/character`, { headers: { ...headers, authentication: apiToken } }).then(res => res.json());
+    expect(sender.wallet).toEqual(988);
+    expect(receiver.wallet).toEqual(1012);
   });
 });
