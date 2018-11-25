@@ -33,7 +33,7 @@ const createUser = async (decker, hpassword) => {
     const { id } = await query('INSERT INTO account.authentication (hpassword) VALUES ($1) RETURNING id', [hpassword]).then(first);
     if (id) {
       const response = await Promise.all([
-        query('INSERT INTO account.player_roles (account_id, role_id) VALUES ($1, 2)', [id]), // decker role
+        query('INSERT INTO account.player_roles (account_id, role_id) VALUES ($1, 1)', [id]), // decker role
         query('SELECT * FROM characters.create_decker($1, $2)', [id, decker]).then(first),
       ]);
       return response[1];

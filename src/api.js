@@ -5,6 +5,7 @@ const exploration = require('./controllers/exploration');
 const decker = require('./controllers/decker');
 const character = require('./controllers/character');
 const scan = require('./controllers/scan');
+const nodes = require('./controllers/nodes');
 const routeAuth = require('./controllers/routeAuth');
 
 const api = KoaRouter();
@@ -33,8 +34,13 @@ api
   .get('/api/v1/decker/unplug/:playerId', decker.nukeDecker) // kill player
   .get('/api/v1/decker/mob/:mobId', decker.nukeMob) // kill & loot mob
   .get('/api/v1/decker/ravage/:playerId', decker.ravageDecker) // kill player & loot
+
   .post('/api/v1/admin/purge/:deckerId', decker.purgeDecker) // mob kills decker
-  .post('/api/v1/decker/nodes/:nodeId') // hack node #TODO
+
+
+  .get('/api/v1/admin/nodes/', nodes.getAllNodes)
+
+  .post('/api/v1/decker/nodes/:nodeId', nodes.captureNode) // hack node
 
 
   .get('/api/v1/decker/products', character.getProducts) // get all products

@@ -61,6 +61,9 @@ const provisionUpgrade = async ({ result, data, ...rest }) => {
 const sendMoney = async (ctx) => {
   const { ammount, recipient } = ctx.request.body;
   const validated = Math.floor(Number(ammount));
+  if (!validated || !recipient) {
+    ValidationError();
+  }
   const { wallet } = await ctx.db.query(dbQuery.getCharForUser, [ctx.user.id]).then(first);
   if (validated < 1) BalanceError('No negative transfers');
   if (wallet < validated) BalanceError('Not enough Balance');
@@ -70,6 +73,7 @@ const sendMoney = async (ctx) => {
       ['UPDATE characters.deckers SET wallet = wallet +$2 WHERE id = $1;', [recipient, validated]],
     );
   } catch (e) {
+    logger.error(e);
     BalanceError('Transaction failed');
   }
   ctx.body = { status: 'Payment Successful' };

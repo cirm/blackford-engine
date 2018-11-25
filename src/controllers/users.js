@@ -3,10 +3,10 @@ const dbQuery = require('../db/admin');
 const bcrypt = require('../utilities/bcrypt');
 
 const getAllUsers = async (ctx) => {
-  ctx.body = await query('SELECT dp.id, dp.username, dp.visited, array_agg(dr.name) AS roles FROM decker.players dp, decker.roles dr, decker.player_roles dpr WHERE dp.id = dpr.player_id and dpr.role_id = dr.id GROUP BY dp.username, dp.visited, dp.id').then(all);
+  ctx.body = await query('SELECT dp.id, dp.decker, array_agg(dr.name) AS roles FROM characters.deckers dp, account.roles dr, account.player_roles dpr WHERE dp.id = dpr.account_id and dpr.role_id = dr.id GROUP BY dp.decker, dp.id').then(all);
 };
 
-const createUser = async (ctx, next) => {
+const createUser = async (ctx) => {
   const username = ctx.request.body.user
     ? ctx.request.body.user
     : `decker_${Math.floor(Math.random() * 899) + 100}_${Date.now()}`;
@@ -19,17 +19,15 @@ const createUser = async (ctx, next) => {
     ...resp,
     username,
   };
-  return next();
 };
 
-const addBudget = async (ctx, next) => {
+const addBudget = async (ctx) => {
   const userId = ctx.params.id;
   const ammount = ctx.params.ammount || 10000;
   const resp = await dbQuery.provisionBudget(userId, ammount);
   ctx.body = {
     ...resp,
   };
-  return next();
 };
 
 module.exports = {
