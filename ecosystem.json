@@ -1,7 +1,7 @@
 {
   "apps": [{
     "name": "blackford-engine",
-    "script": "build/index.js",
+    "script": "./build/index.js",
     "watch": false,
     "merge_logs": true,
     "log_date_format": "YYYY-MM-DD HH:mm Z",
