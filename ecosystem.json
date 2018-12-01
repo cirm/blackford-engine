@@ -33,7 +33,7 @@
       // even before the setup process starts
       // can be multiple commands separated by the character ";"
       // or path to a script on your local machine
-      "pre-setup": "apt-get install git && npm install -g pm2",
+      "pre-setup": "apt-get install git",
       // Commands / path to a script on the host machine
       // This will be executed on the host after cloning the repository
       // eg: placing configurations in the shared dir etc
@@ -42,7 +42,7 @@
       // Can be multiple commands separated by the character ";"
       "pre-deploy-local": "echo 'Starting new Deploy'",
       // Commands to be executed on the server after the repo has been cloned
-      "post-deploy": "npm install && npm run build && pm2 startOrRestart ecosystem.json --env production",
+      "post-deploy": "npm install && npm run build && npm run startOrRestart",
       // Environment variables that must be injected in all applications on this env
       "env": {
         "NODE_ENV": "production"
