@@ -21,7 +21,7 @@
       // Branch
       "ref": "origin/master",
       // Git repository to clone
-      "repo": "git@github.com:cirm/blackford-engine.git",
+      "repo": "https://github.com/cirm/blackford-engine.git",
       // Path of the application on target servers
       "path": "/home/bakufu/server",
       // Can be used to give options in the format used in the configura-
