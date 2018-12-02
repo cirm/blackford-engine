@@ -10,14 +10,14 @@ const routeAuth = require('./controllers/routeAuth');
 
 const api = KoaRouter();
 api
-  .use('/api', routeAuth.userAuth)
+  .use('/api/v1', routeAuth.userAuth)
   .use('/api/v1/admin', routeAuth.checkAdmin)
   .use('/api/v1/decker', routeAuth.checkDecker)
   .use('/api/v1/montor', routeAuth.checkMonitor)
 
-  .post('/token', authentication.getTokens) // get chatToken
-  .put('/token', authentication.renewToken) // renew chatToken
-  .post('/gameToken', authentication.getGameToken) // get mobile token
+  .post('/api/token', authentication.getTokens) // get chatToken
+  .put('/api/token', authentication.renewToken) // renew chatToken
+  .post('/api/gameToken', authentication.getGameToken) // get mobile token
 
 
   .get('/api/v1/admin/users', users.getAllUsers)
