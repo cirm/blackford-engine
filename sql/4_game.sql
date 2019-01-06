@@ -43,9 +43,17 @@ create table game.decker2objects(
 create table game.nodes(
 	id SERIAL PRIMARY KEY,
 	active BOOLEAN NOT NULL,
-	owner INT,
-	level INT NOT NULL,
-	FOREIGN KEY (owner) REFERENCES characters.deckers(id)
+	captured BOOLEAN NOT NULL DEFAULT FALSE,
+	level INT NOT NULL
+);
+
+create table game.node_status_events(
+	id serial PRIMARY KEY,
+	node_id INT NOT NULL,
+	owner INT NOT NULL,
+	captured TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	FOREIGN KEY (owner) REFERENCES characters.deckers(id),
+	FOREIGN KEY (node_id) REFERENCES game.nodes(id)
 );
 
 create table game.mobs(

@@ -1,6 +1,6 @@
 const Promise = require('bluebird');
-const config = require('../config');
 const JWT = Promise.promisifyAll(require('jsonwebtoken'));
+const config = require('../config');
 const logger = require('../utilities/winston');
 
 const userAuth = async (ctx, next) => {

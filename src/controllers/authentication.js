@@ -22,6 +22,11 @@ const TokenError = (message, params, status = 401) => {
   throw err;
 };
 
+const logRequest = ({ tokens, ...rest }) => {
+  logger.debug(`Renewal for: ${tokens.apiToken}`);
+  return { tokens, ...rest };
+};
+
 const generateApiToken = ({ id, username, roles }) => JWT.signAsync({
   id,
   username,
@@ -93,12 +98,6 @@ const getGameToken = async (ctx) => {
 };
 
 const parseTokenFromBody = ({ request }) => ({ tokens: request.body } || {});
-
-const logRequest = ({ tokens, ...rest }) => {
-  logger.debug(`Renewal for: ${tokens.apiToken}`);
-  return { tokens, ...rest };
-};
-
 
 const verifyToken = async ({ tokens }) => {
   try {

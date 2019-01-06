@@ -1,7 +1,6 @@
 INSERT INTO account.roles (name) VALUES
     ('decker'),
-    ('admin'),
-    ('skiddle');
+    ('admin');
 
 INSERT INTO characters.upgrades (name, multiplier, cost, value, type) VALUES 
 ('Redeem soul', 4, 1000, 2, 0),
@@ -30,7 +29,10 @@ INSERT INTO account.authentication (hpassword) VALUES ('$2a$11$kU3NTUGBlybcDbMOr
 SELECT * FROM characters.create_decker(1, 'bakufu');
 
 INSERT INTO account.player_roles (account_id, role_id) VALUES (1, 1), (1, 2);
-INSERT INTO game.nodes (active, owner, level) VALUES 
-('true', 1, 1),
-('false', null, 5),
-('true', null, 5);
+INSERT INTO game.nodes (active, level, captured) VALUES 
+('true', 1, true),
+('false', 5, false),
+('true', 5, false);
+
+INSERT INTO game.node_status_events (node_id, owner, captured) VALUES 
+(1, 1, now());

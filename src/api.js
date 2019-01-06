@@ -39,6 +39,8 @@ api
 
 
   .get('/api/v1/admin/nodes/', nodes.getAllNodes)
+  .get('/api/v1/admin/nodeStatus/', nodes.getNodeStatus)
+  .get('/api/v1/admin/nodes/:nodeId', nodes.getNodeHistory)
 
   .post('/api/v1/decker/nodes/:nodeId', nodes.captureNode) // hack node
 
