@@ -1,5 +1,6 @@
-const { query } = require('../db');
+const { query, first } = require('../db');
 const { reccordObjectScan } = require('../db/scan');
+const logger = require('../utilities/winston');
 
 const readError = (ctx) => {
   ctx.body = {
@@ -17,12 +18,22 @@ const readPlayer = async (ctx) => {
 };
 
 const readNode = async (ctx) => {
-  const { rows } = await query('SELECT gn.id, gn.active, cd.decker AS owner, gn.level FROM game.nodes gn LEFT OUTER JOIN characters.deckers cd ON (gn.owner = cd.id) WHERE gn.id = $1;', [ctx.params.id]);
-  if (!rows.length) return readError(ctx);
+  const resp = await ctx.db.query('SELECT gn.id, gn.active, gn.captured FROM game.nodes gn WHERE gn.id = $1;', [ctx.params.id]).then(first);
+  if (!resp) return readError(ctx);
+  if (!resp.captured) {
+    ctx.body = {
+      active: resp.active,
+      captured: 'unclaimed',
+      level: resp.level,
+    };
+    return ctx;
+  }
+  const capturedData = await ctx.db.query('SELECT nse.node_id, nse.owner, c.decker, nse.captured FROM game.node_status_events nse, characters.deckers c WHERE c.id = nse.owner and nse.node_id = $1 ORDER BY captured DESC limit 1;', [ctx.params.id]).then(first);
   ctx.body = {
-    active: rows[0].active,
-    owner: rows[0].owner ? rows[0].owner : 'unclaimed',
-    level: rows[0].level,
+    active: resp.active,
+    captured: capturedData.captured,
+    owner: capturedData.decker,
+    level: resp.level,
   };
 };
 

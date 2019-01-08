@@ -5,7 +5,7 @@ let adminToken;
 
 beforeAll(async () => {
   const body = { username: 'bakufu', password: 'EndOria' };
-  adminToken = await fetch(`${server}/token`, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }).then(res => res.apiToken);
+  adminToken = await fetch(`${server}/api/token`, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }).then(res => res.apiToken);
 });
 
 describe('routes: /decker', () => {

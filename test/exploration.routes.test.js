@@ -5,7 +5,7 @@ describe('routes: /exploration', () => {
   let adminToken;
   beforeAll(async () => {
     const body = { username: 'bakufu', password: 'EndOria' };
-    adminToken = await fetch(`${server}/token`, { method: 'POST', body: JSON.stringify(body), headers }).then(res => res.apiToken);
+    adminToken = await fetch(`${server}/api/token`, { method: 'POST', body: JSON.stringify(body), headers }).then(res => res.apiToken);
   });
 
   test('Inittial exploration test', async () => {

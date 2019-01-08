@@ -69,7 +69,7 @@ const captureNode = async (ctx) => {
   }
   // claim node
   console.log('whee');
-  ctx.body = { status: 'Metal heavy!' };
+  ctx.body = { status: 'Captured node!' };
 };
 
 module.exports = {

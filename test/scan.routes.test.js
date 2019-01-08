@@ -5,7 +5,7 @@ describe('routes: /scan', () => {
   let adminToken;
   beforeAll(async () => {
     const body = { username: 'bakufu', password: 'EndOria' };
-    adminToken = await fetch(`${server}/token`, { method: 'POST', body: JSON.stringify(body), headers }).then(res => res.apiToken);
+    adminToken = await fetch(`${server}/api/token`, { method: 'POST', body: JSON.stringify(body), headers }).then(res => res.apiToken);
   });
 
   test('Scan player', async () => {
@@ -24,7 +24,7 @@ describe('routes: /scan', () => {
   test('scan node', async () => {
     const authentication = await createTestUser(adminToken);
     const response = await fetch(`${server}/api/v1/decker/scan/node/3`, { headers: { authentication } });
-    expect(response).toEqual({ active: true, level: 5, owner: 'unclaimed' });
+    expect(response).toEqual({ active: true, captured: '2019-01-06T08:54:10.934Z', owner: 'bakufu' });
   });
 
   test('scan object', async () => {
