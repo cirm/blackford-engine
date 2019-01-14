@@ -13,8 +13,9 @@
     "exec_mode": "cluster_mode",
     "autorestart": true
   }, {
-    "name": "compensate",
-    "script": "./build/jobs/node_rewards.js --cron '* * * * *'",
+    "name": "node Rewarder",
+    "script": "./build/jobs/node_rewards.js",
+    "cron_restart": "* * * * *",
     "watch": true
   }],
   "deploy": {
