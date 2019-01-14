@@ -47,7 +47,7 @@
       // Can be multiple commands separated by the character ";"
       "pre-deploy-local": "echo 'Starting new Deploy'",
       // Commands to be executed on the server after the repo has been cloned
-      "post-deploy": "npm install && npm run build && npm run buildJobs && npm run startOrRestart",
+      "post-deploy": "npm install && npm run build && npm run startOrRestart",
       // Environment variables that must be injected in all applications on this env
       "env": {
         "NODE_ENV": "production"
