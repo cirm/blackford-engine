@@ -63,8 +63,8 @@ create table game.node_compensation_events(
 	ammount INT NOT NULL,
 	recipient INT NOT NULL,
 	FOREIGN KEY (node_event_id) REFERENCES game.node_status_events(id),
-	FOREIGN KEY (recipient) REFERENCES characters.deckers(id),
-)
+	FOREIGN KEY (recipient) REFERENCES characters.deckers(id)
+);
 
 create table game.mobs(
 	id SERIAL PRIMARY KEY,

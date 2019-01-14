@@ -7,6 +7,7 @@
     "start": "babel-node index.js",
     "watch": "nodemon --exec npm run start",
     "build": "babel src -d build",
+    "buildJobs": "babel jobs -d build/jobs",
     "deploy": "pm2 deploy ecosystem.json production",
     "startOrRestart": "pm2 startOrRestart ecosystem.json --env production",
     "test": "jest"
