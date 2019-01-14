@@ -12,6 +12,8 @@ const config = {
 
 const pool = new Pool(config);
 
+const closePool = () => { pool.end().then(() => { logger.info('Closing down PG pool'); }); };
+
 const query = async (text: string, params: ?Array<mixed> = []) => {
   const start = Date.now();
   const result = await pool.query(text, params);
@@ -47,6 +49,7 @@ const all = ({ rows }) => rows;
 
 module.exports = {
   query,
+  closePool,
   transaction,
   all,
   first,

@@ -56,6 +56,16 @@ create table game.node_status_events(
 	FOREIGN KEY (node_id) REFERENCES game.nodes(id)
 );
 
+create table game.node_compensation_events(
+	id serial PRIMARY Key,
+	node_event_id INT NOT NULL,
+	timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	ammount INT NOT NULL,
+	recipient INT NOT NULL,
+	FOREIGN KEY (node_event_id) REFERENCES game.node_status_events(id),
+	FOREIGN KEY (recipient) REFERENCES characters.deckers(id),
+)
+
 create table game.mobs(
 	id SERIAL PRIMARY KEY,
 	level INT NOT NULL,
