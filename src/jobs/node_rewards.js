@@ -30,7 +30,7 @@ const rewarder = async () => {
       );
     } catch (e) {
       logger.error(e);
-      logger.info('Provisioning Failed for node event: ', node.node_event_id);
+      logger.error('Provisioning Failed for node event: ', node.node_event_id);
     }
   });
   await Promise.all(updates);
